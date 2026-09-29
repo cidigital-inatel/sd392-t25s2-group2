@@ -98,16 +98,6 @@ Os principais sinais de entrada são:
 | `TLAST` | 1 bit | Indica a última transferência do quadro |
 | `TUSER` | 1 bit | Indica a validade final do quadro recebido |
 
-A interface RX adotada não utiliza `TREADY`.
-
-Dessa forma, o Parser deve estar preparado para consumir os dados sempre que:
-
-```text
-TVALID = 1
-```
-
-Também não existe um sinal explícito de início de pacote (`SOP`).
-
 O início de um novo quadro é identificado quando o Parser está aguardando um novo pacote e ocorre:
 
 ```text
