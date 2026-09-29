@@ -40,23 +40,6 @@ A primeira prova de conceito considera os seguintes elementos:
 - `byte_count`
 - `duration`
 
-### Fora do escopo inicial
-
-Nesta primeira etapa, não fazem parte do escopo:
-
-- IPv6;
-- VLAN;
-- reconstrução de fragmentos IPv4;
-- fluxos bidirecionais;
-- médias e variâncias;
-- IAT;
-- tratamento avançado de colisões;
-- timeout completo;
-- finalização por FIN/RST;
-- classificação por Machine Learning.
-
-A proposta é desenvolver uma base funcional que possa ser expandida posteriormente.
-
 ---
 
 ## Arquitetura do sistema
