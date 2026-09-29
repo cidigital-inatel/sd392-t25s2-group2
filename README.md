@@ -83,10 +83,17 @@ timestamp
 ```
 
 ---
+## FSM do Packet Parser
+
+A máquina de estados do Packet Parser controla a recepção do quadro, a interpretação dos cabeçalhos Ethernet II e IPv4, a seleção do protocolo TCP/UDP e a validação final do pacote.
+
+![FSM do Packet Parser](docs/images/fsm_parser.png)
+----
 
 ### Interface MAC RX
 
 O Packet Parser está sendo adaptado para operar com uma interface compatível com o MAC RX de referência.
+
 
 Os principais sinais de entrada são:
 
