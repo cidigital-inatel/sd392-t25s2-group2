@@ -127,16 +127,6 @@ Um módulo separado denominado **TSU (Timestamping Unit)** será conectado ao Pa
 
 O Parser deverá capturar o timestamp no início da recepção de um novo quadro.
 
-Fluxo conceitual:
-
-```text
-        TSU
-         │
-         │ timestamp
-         ▼
-   Packet Parser
-```
-
 A interface definitiva do TSU ainda será especificada ao longo do desenvolvimento.
 
 ---
