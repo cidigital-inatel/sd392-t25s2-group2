@@ -179,7 +179,7 @@ selecionadas como features.
 A FSM foi atualizada para refletir a nova interface do MAC, a captura
 externa de timestamp e a validação final por TUSER.
 
-<img src="docs/fsm_parser.png"
+<img src="docs/images/fsm_parser.png"
 style="width:6.5in;height:4.875in" />
 
 *Figura 1 – FSM atualizada do Packet Parser com interface MAC RX e TSU.*
