@@ -36,7 +36,7 @@ A lógica interna do Parser deve manter a mesma finalidade: associar um timestam
 | `src_port` | 16 bits | Saída | Porta de origem TCP ou UDP. |
 | `dst_port` | 16 bits | Saída | Porta de destino TCP ou UDP. |
 | `protocol` | 8 bits | Saída | Protocolo de transporte indicado pelo cabeçalho IPv4: `6` para TCP e `17` para UDP. |
-| `packet_length` | 16 bits *(sugerido)* | Saída | Comprimento do pacote utilizado na atualização de `byte_count`. |
+| `packet_length` | 16 bits | Saída | Comprimento do pacote utilizado na atualização de `byte_count`. |
 | `timestamp` | Mesma largura de `timestamp_in` | Saída | Timestamp associado ao pacote processado. |
 | `metadata_valid` | 1 bit | Saída | Indica que os metadados apresentados na saída correspondem a um quadro válido e podem ser consumidos pelo próximo módulo. |
 
@@ -47,64 +47,10 @@ A lógica interna do Parser deve manter a mesma finalidade: associar um timestam
 | Condição | Contrato |
 |---|---|
 | Início do quadro | O Parser considera o início de um novo quadro quando está em `IDLE` e `TVALID = 1`. |
-| Transferência válida | Como a interface RX adotada não utiliza `TREADY`, toda palavra com `TVALID = 1` deve ser consumida pelo Parser. |
+| Transferência válida | Toda palavra com `TVALID = 1` deve ser consumida pelo Parser. |
 | Fim do quadro | O final do quadro ocorre quando `TVALID && TLAST = 1`. |
 | Validade do quadro | Ao final do quadro, `TUSER` determina se os metadados podem ser liberados. Para a interface atualmente adotada: `TUSER = 1` indica quadro válido e `TUSER = 0` indica quadro inválido. |
 | Saída válida | `metadata_valid` deve ser ativado somente para pacotes suportados e considerados válidos pelo MAC. |
 
 ---
 
-## 4. Definição sugerida para `packet_length`
-
-Sugere-se utilizar como `packet_length` o campo **IPv4 Total Length**, com largura de **16 bits**.
-
-Esse campo informa o tamanho, em bytes, do datagrama IPv4 completo, incluindo:
-
-- cabeçalho IPv4;
-- carga útil do IPv4.
-
-Essa escolha é adequada para a primeira PoC porque:
-
-- o campo já está disponível no cabeçalho IPv4;
-- não exige contagem adicional dos bytes do quadro no Parser;
-- pode ser utilizado diretamente na etapa de Extração de Features:
-
-```text
-byte_count = byte_count + packet_length
-```
-
-> **Importante:** a equipe deve confirmar essa convenção como contrato global, pois `packet_length` também poderia ser definido como o tamanho total do quadro Ethernet. Uma única definição deve ser utilizada em todos os módulos e também no modelo de referência.
-
----
-
-## 5. Resumo da interface
-
-### Entradas
-
-```text
-clk
-reset_n
-TDATA[63:0]
-TKEEP[7:0]
-TVALID
-TLAST
-TUSER
-timestamp_in
-```
-
-### Saídas
-
-```text
-src_ip[31:0]
-dst_ip[31:0]
-src_port[15:0]
-dst_port[15:0]
-protocol[7:0]
-packet_length[15:0]   // sugerido
-timestamp
-metadata_valid
-```
-
-### Observação futura
-
-Na implementação em FPGA, `timestamp_in` passará a ser fornecido pelo módulo TSU.
