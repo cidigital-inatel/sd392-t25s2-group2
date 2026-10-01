@@ -631,15 +631,6 @@ Ao final do projeto, espera-se obter uma arquitetura capaz de:
 
 ---
 
-# Contexto Acadêmico
-
-**CI Digital Inatel – T25S2**  
-**Plano de Trabalho (TCC) – Grupo 2**
-
-### Projeto
-
-**Arquitetura em FPGA para Extração de Features de Fluxos TCP/IP visando Sistemas de Detecção de Intrusão em Rede Baseados em Machine Learning**
-
 ### Orientação
 
 - Dr. Elivander Pereira
