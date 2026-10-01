@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/logo_cidigital.png" alt="Logo CI Digital" width="500">
+</p>
+
 # Arquitetura em FPGA para Extração de Features de Fluxos TCP/IP
 
 Projeto acadêmico desenvolvido no **CI Digital Inatel – T25S2 – Grupo 2**, com foco no desenvolvimento, em HDL, de uma arquitetura para **extração de metadados e features de fluxos TCP/IP em FPGA**, visando aplicações em Sistemas de Detecção de Intrusão em Rede (NIDS) baseados em Machine Learning.
