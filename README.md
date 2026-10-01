@@ -23,8 +23,16 @@ Desenvolver em HDL um sistema capaz de:
 
 A arquitetura é organizada em dois blocos principais:
 
-<img src="docs/images/arquitetura.png"
-style="width:6.5in;height:4.875in" />
+- **Extração de Metadados**
+- **Extração de Features**
+
+O fluxo de processamento parte de arquivos PCAP no ambiente de teste, passa pela interface MAC RX e pelo Packet Parser, segue para identificação do uniflow e cálculo do hash, e então alimenta a estrutura responsável por manter e atualizar o estado dos fluxos.
+
+Durante a fase atual de simulação, o timestamp é obtido a partir do próprio arquivo PCAP. Na futura implementação em FPGA, essa informação será fornecida por um módulo TSU.
+
+<p align="center">
+  <img src="docs/images/arquitetura.png" alt="Arquitetura do sistema" width="1200">
+</p>
 
 ---
 
