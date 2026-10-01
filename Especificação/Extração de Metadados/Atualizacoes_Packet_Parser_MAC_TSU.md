@@ -179,7 +179,7 @@ selecionadas como features.
 A FSM foi atualizada para refletir a nova interface do MAC, a captura
 externa de timestamp e a validação final por TUSER.
 
-<img src="media/image1.png"
+<img src="docs/fsm_parser.png"
 style="width:6.5in;height:4.875in" />
 
 *Figura 1 – FSM atualizada do Packet Parser com interface MAC RX e TSU.*
@@ -245,12 +245,6 @@ até que a interface definitiva desse módulo seja especificada.
   do clock.
 
 - Formalizar a política para IPv4 fragmentado.
-
-- Definir se flags TCP serão incorporadas ainda nesta etapa ou apenas em
-  evolução futura.
-
-- Atualizar o script Python e o testbench para o novo formato de
-  estímulos.
 
 # 13. Conclusão
 
