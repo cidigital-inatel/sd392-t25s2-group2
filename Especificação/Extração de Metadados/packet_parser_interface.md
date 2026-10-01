@@ -54,3 +54,28 @@ A lógica interna do Parser deve manter a mesma finalidade: associar um timestam
 
 ---
 
+## 5. Resumo da interface
+Entradas
+```text
+clk
+reset_n
+TDATA[63:0]
+TKEEP[7:0]
+TVALID
+TLAST
+TUSER
+timestamp_in
+```
+Saídas
+```text
+src_ip[31:0]
+dst_ip[31:0]
+src_port[15:0]
+dst_port[15:0]
+protocol[7:0]
+packet_length[15:0] 
+timestamp
+metadata_valid
+```
+
+
