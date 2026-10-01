@@ -19,34 +19,12 @@ Desenvolver em HDL um sistema capaz de:
 
 ---
 
-## Escopo inicial
-
-A primeira prova de conceito considera os seguintes elementos:
-
-### Protocolos
-
-- Ethernet II
-- IPv4
-- TCP
-- UDP
-
-### Modelo de fluxo
-
-- Fluxos unidirecionais (**uniflows**)
-
-### Features iniciais
-
-- `packet_count`
-- `byte_count`
-- `duration`
-
----
-
 ## Arquitetura do sistema
 
 A arquitetura é organizada em dois blocos principais:
 
-
+<img src="docs/images/arquitetura.png"
+style="width:6.5in;height:4.875in" />
 
 ---
 
