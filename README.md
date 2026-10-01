@@ -5,6 +5,7 @@
 <h1 align="center">
   Arquitetura em FPGA para Extração de Features de Fluxos TCP/IP
 </h1>
+
 Projeto acadêmico desenvolvido no **CI Digital Inatel – T25S2 – Grupo 2**, com foco no desenvolvimento, em HDL, de uma arquitetura para **extração de metadados e features de fluxos TCP/IP em FPGA**, visando aplicações em Sistemas de Detecção de Intrusão em Rede (NIDS) baseados em Machine Learning.
 
 > **Importante:** o classificador de Machine Learning não faz parte do escopo deste projeto. O foco está na cadeia de hardware responsável por transformar o tráfego de rede em metadados e features estruturadas.
