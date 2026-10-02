@@ -15,7 +15,7 @@ Este documento registra exclusivamente o contrato de interface do módulo **Pack
 | `TVALID` | 1 bit | Entrada | MAC RX / testbench | Indica que `TDATA` e `TKEEP` são válidos no ciclo atual. |
 | `TLAST` | 1 bit | Entrada | MAC RX / testbench | Indica a última transferência do quadro. |
 | `TUSER` | 1 bit | Entrada | MAC RX / testbench | Indica a validade final do quadro recebido. |
-| `timestamp_in` | A definir | Entrada | PCAP → Python → testbench | Timestamp associado ao pacote durante a fase atual de simulação. |
+| `timestamp_in` | 80 bits | Entrada | PCAP → Python → testbench | Timestamp associado ao pacote durante a fase atual de simulação. |
 
 ### Observação sobre o timestamp
 
@@ -37,7 +37,7 @@ A lógica interna do Parser deve manter a mesma finalidade: associar um timestam
 | `dst_port` | 16 bits | Saída | Porta de destino TCP ou UDP. |
 | `protocol` | 8 bits | Saída | Protocolo de transporte indicado pelo cabeçalho IPv4: `6` para TCP e `17` para UDP. |
 | `packet_length` | 16 bits | Saída | Comprimento do pacote utilizado na atualização de `byte_count`. |
-| `timestamp` | Mesma largura de `timestamp_in` | Saída | Timestamp associado ao pacote processado. |
+| `timestamp` | 80 bits | Saída | Timestamp associado ao pacote processado. |
 | `metadata_valid` | 1 bit | Saída | Indica que os metadados apresentados na saída correspondem a um quadro válido e podem ser consumidos pelo próximo módulo. |
 
 ---
@@ -64,7 +64,7 @@ TKEEP[7:0]
 TVALID
 TLAST
 TUSER
-timestamp_in
+timestamp_in[79:0]
 ```
 Saídas
 ```text
@@ -74,7 +74,7 @@ src_port[15:0]
 dst_port[15:0]
 protocol[7:0]
 packet_length[15:0] 
-timestamp
+timestamp[79:0]
 metadata_valid
 ```
 
