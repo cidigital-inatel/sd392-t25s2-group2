@@ -1,0 +1,84 @@
+# Resultado da simulacao do MAC RX mockup
+# Campos: pacote word tsu_ns tdata tkeep tvalid tlast tuser
+
+pacote=1 word=0 tsu=10 ns tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=1 word=1 tsu=20 ns tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=1 word=2 tsu=30 ns tdata=0640000001002800 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=1 word=3 tsu=40 ns tdata=a8c00a0aa8c060e5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=1 word=4 tsu=50 ns tdata=0000500000c0140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=1 word=5 tsu=60 ns tdata=025000000000e803 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=1 word=6 tsu=70 ns tdata=000000003b360020 tkeep=3f tvalid=1 tlast=1 tuser=1
+Pacote 1 concluido: bytes=54/54 words=7/7 timestamp=10/10 ns erro=0
+pacote=2 word=0 tsu=90 ns tdata=0002011000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=2 word=1 tsu=100 ns tdata=0045000801200000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=2 word=2 tsu=110 ns tdata=0640000001002800 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=2 word=3 tsu=120 ns tdata=a8c0140aa8c060e5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=2 word=4 tsu=130 ns tdata=000000c050000a0a tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=2 word=5 tsu=140 ns tdata=1250e9030000d007 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=2 word=6 tsu=150 ns tdata=000000005a2e0020 tkeep=3f tvalid=1 tlast=1 tuser=1
+Pacote 2 concluido: bytes=54/54 words=7/7 timestamp=90/90 ns erro=0
+pacote=3 word=0 tsu=170 ns tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=3 word=1 tsu=180 ns tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=3 word=2 tsu=190 ns tdata=0640000001002800 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=3 word=3 tsu=200 ns tdata=a8c00a0aa8c060e5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=3 word=4 tsu=210 ns tdata=0000500000c0140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=3 word=5 tsu=220 ns tdata=1050d1070000e903 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=3 word=6 tsu=230 ns tdata=000000005b2e0020 tkeep=3f tvalid=1 tlast=1 tuser=1
+Pacote 3 concluido: bytes=54/54 words=7/7 timestamp=170/170 ns erro=0
+pacote=4 word=0 tsu=250 ns tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=1 tsu=260 ns tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=2 tsu=270 ns tdata=0640000001006c00 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=3 tsu=280 ns tdata=a8c00a0aa8c01ce5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=4 tsu=290 ns tdata=0000500000c0140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=5 tsu=300 ns tdata=1850d1070000e903 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=6 tsu=310 ns tdata=45470000785f0020 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=7 tsu=320 ns tdata=7865646e692f2054 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=8 tsu=330 ns tdata=5448206c6d74682e tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=9 tsu=340 ns tdata=0a0d312e312f5054 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=10 tsu=350 ns tdata=7865203a74736f48 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=11 tsu=360 ns tdata=6f6c2e6f6c706d65 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=12 tsu=370 ns tdata=6e6f430a0d6c6163 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=13 tsu=380 ns tdata=3a6e6f697463656e tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=14 tsu=390 ns tdata=0a0d65736f6c6320 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=4 word=15 tsu=400 ns tdata=0000000000000a0d tkeep=03 tvalid=1 tlast=1 tuser=1
+Pacote 4 concluido: bytes=122/122 words=16/16 timestamp=250/250 ns erro=0
+pacote=5 word=0 tsu=420 ns tdata=0002011000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=1 tsu=430 ns tdata=0045000801200000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=2 tsu=440 ns tdata=0640000001006f00 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=3 tsu=450 ns tdata=a8c0140aa8c019e5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=4 tsu=460 ns tdata=000000c050000a0a tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=5 tsu=470 ns tdata=18502d040000d107 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=6 tsu=480 ns tdata=5448000021e70020 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=7 tsu=490 ns tdata=3220312e312f5054 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=8 tsu=500 ns tdata=430a0d4b4f203030 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=9 tsu=510 ns tdata=4c2d746e65746e6f tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=10 tsu=520 ns tdata=31203a6874676e65 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=11 tsu=530 ns tdata=656e6e6f430a0d33 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=12 tsu=540 ns tdata=63203a6e6f697463 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=13 tsu=550 ns tdata=0a0d0a0d65736f6c tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=14 tsu=560 ns tdata=57202c6f6c6c6548 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=5 word=15 tsu=570 ns tdata=00000021646c726f tkeep=1f tvalid=1 tlast=1 tuser=1
+Pacote 5 concluido: bytes=125/125 words=16/16 timestamp=420/420 ns erro=0
+pacote=6 word=0 tsu=590 ns tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=6 word=1 tsu=600 ns tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=6 word=2 tsu=610 ns tdata=1140000001003100 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=6 word=3 tsu=620 ns tdata=a8c00a0aa8c04ce5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=6 word=4 tsu=630 ns tdata=1d00881308cf140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=6 word=5 tsu=640 ns tdata=6761736e656d02ae tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=6 word=6 tsu=650 ns tdata=6420504455206d65 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=6 word=7 tsu=660 ns tdata=0065747365742065 tkeep=7f tvalid=1 tlast=1 tuser=1
+Pacote 6 concluido: bytes=63/63 words=8/8 timestamp=590/590 ns erro=0
+pacote=7 word=0 tsu=680 ns tdata=0002011000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=7 word=1 tsu=690 ns tdata=0045000801200000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=7 word=2 tsu=700 ns tdata=1140000001003100 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=7 word=3 tsu=710 ns tdata=a8c0140aa8c04ce5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=7 word=4 tsu=720 ns tdata=1d0008cf88130a0a tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=7 word=5 tsu=730 ns tdata=736f707365720587 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=7 word=6 tsu=740 ns tdata=6420504455206174 tkeep=ff tvalid=1 tlast=0 tuser=0
+pacote=7 word=7 tsu=750 ns tdata=0065747365742065 tkeep=7f tvalid=1 tlast=1 tuser=1
+Pacote 7 concluido: bytes=63/63 words=8/8 timestamp=680/680 ns erro=0
+===============================================
+TESTE PASSOU: clock, reset, TKEEP, TLAST e TSU.
+Pacotes processados: 7
+Palavras processadas: 69
+===============================================
