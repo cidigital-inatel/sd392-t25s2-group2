@@ -188,7 +188,7 @@ A simulação foi executada com sucesso no **ModelSim - Intel FPGA Edition 2021.
 A validação automática confirmou a extração correta dos metadados do pacote TCP
 
 <p align="center">
-  <img src="rtl/packet_parser/PoC_1_packet_parser.png"
+  <img src="rtl/packet_parser/PoC_1/Parser.png"
        alt="Resultado da simulação do Packet Parser no ModelSim"
        width="900">
 </p>
@@ -212,7 +212,7 @@ timestamp     = 1_234_567 us
 A Wave foi utilizada para verificar o comportamento temporal da interface e os principais sinais internos do Packet Parser.
 
 <p align="center">
-  <img src="docs/images/wave_packet_parser.png"
+  <img src="rtl/packet_parser/PoC_1/Testbench.png"
        alt="Wave da simulação do Packet Parser no ModelSim"
        width="1100">
 </p>
