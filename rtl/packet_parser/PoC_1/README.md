@@ -4,8 +4,6 @@
 
 Nesta etapa foram desenvolvidos os arquivos necessários para estruturar e validar a primeira prova de conceito funcional do **Packet Parser** no ambiente de simulação.
 
-O trabalho do dia resultou na criação de:
-
 - `packet_parser.sv`;
 - `packet_parser_tb.sv`;
 - `create_test_pcap.py`;
@@ -180,8 +178,6 @@ O timestamp esperado também é obtido do próprio arquivo de estímulos, evitan
 ---
 
 ## 7. Resultado da simulação
-
-A simulação foi executada com sucesso no **ModelSim - Intel FPGA Edition 2021.1**.
 
 A validação automática confirmou a extração correta dos metadados do pacote TCP
 
