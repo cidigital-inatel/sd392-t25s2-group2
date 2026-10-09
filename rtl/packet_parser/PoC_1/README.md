@@ -188,7 +188,7 @@ A simulação foi executada com sucesso no **ModelSim - Intel FPGA Edition 2021.
 A validação automática confirmou a extração correta dos metadados do pacote TCP
 
 <p align="center">
-  <img src="docs/images/transcript_packet_parser.png"
+  <img src="rtl/packet_parser/PoC_1_packet_parser.png"
        alt="Resultado da simulação do Packet Parser no ModelSim"
        width="900">
 </p>
