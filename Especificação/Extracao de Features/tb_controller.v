@@ -1,3 +1,4 @@
+
 `timescale 1ns/1ps
 
 module tb_controller;
@@ -26,17 +27,17 @@ module tb_controller;
     wire [383:0] flow_entry;
     wire         fin_valid;
 
-    // Memoria simulada (so os enderecos 120..143 sao usados)
     reg [15:0] memory [0:4095];
 
     reg [20:0] pending_addr;
     reg        pending_read;
 
+    reg [20:0] expected_base;
+
     integer i;
     integer reads_seen;
     integer errors;
-
-    reg [20:0] expected_base;
+    integer test_number;
 
     always #5 clk = ~clk;
 
@@ -66,8 +67,9 @@ module tb_controller;
         .fin_valid(fin_valid)
     );
 
-    // Memoria simulada: retorna os dados um ciclo
-    // apos a solicitacao de leitura.
+    // --------------------------------------------------
+    // Modelo de memória síncrona com latência de leitura.
+    // --------------------------------------------------
     always @(posedge clk) begin
         if (reset) begin
             rd_data      <= 16'd0;
@@ -87,21 +89,134 @@ module tb_controller;
         end
     end
 
-    // Verifica os enderecos solicitados pelo Controller.
+    // --------------------------------------------------
+    // Monitor de endereços.
+    // --------------------------------------------------
     always @(posedge clk) begin
         if (reset) begin
-            reads_seen <= 0;
+            reads_seen = 0;
         end else if (rd_en) begin
             if (rd_addr !== (expected_base + reads_seen)) begin
-                $display("ERRO: Endereco incorreto: obtido=%0d, esperado=%0d",
-                         rd_addr, expected_base + reads_seen);
+                $display(
+                    "ERRO: teste %0d, endereco obtido=%0d, esperado=%0d",
+                    test_number,
+                    rd_addr,
+                    expected_base + reads_seen
+                );
                 errors = errors + 1;
             end
 
-            reads_seen <= reads_seen + 1;
+            reads_seen = reads_seen + 1;
         end
     end
 
+    // --------------------------------------------------
+    // Tarefa para testar uma consulta.
+    // --------------------------------------------------
+    task run_lookup;
+        input [15:0]  test_hash;
+        input [103:0] test_key;
+        input [15:0]  test_length;
+        input [79:0]  test_timestamp;
+
+        integer k;
+        reg [20:0] calculated_base;
+
+        begin
+            test_number = test_number + 1;
+            calculated_base = test_hash * 21'd24;
+
+            // Aguarda o Controller ficar livre.
+            wait (dut.state == 3'd0);
+            wait (dut.start == 1'b0);
+            @(negedge clk);
+
+            hash_index    = test_hash;
+            flow_key      = test_key;
+            packet_length = test_length;
+            timestamp     = test_timestamp;
+
+            expected_base = calculated_base;
+            reads_seen    = 0;
+
+            // Inicializa as 24 palavras da entrada.
+            for (k = 0; k < 24; k = k + 1)
+                memory[calculated_base + k] = 16'hA000 + k;
+
+            // Inicia a consulta.
+            hash_valid = 1'b1;
+
+            @(negedge clk);
+            hash_valid = 1'b0;
+
+            // Verifica os metadados capturados.
+            if (dut.hash_index_reg !== test_hash) begin
+                $display("ERRO: hash_index_reg incorreto.");
+                errors = errors + 1;
+            end
+
+            if (dut.flow_key_reg !== test_key) begin
+                $display("ERRO: flow_key_reg incorreto.");
+                errors = errors + 1;
+            end
+
+            if (dut.packet_length_reg !== test_length) begin
+                $display("ERRO: packet_length_reg incorreto.");
+                errors = errors + 1;
+            end
+
+            if (dut.timestamp_reg !== test_timestamp) begin
+                $display("ERRO: timestamp_reg incorreto.");
+                errors = errors + 1;
+            end
+
+            // Aguarda as 24 solicitações de leitura.
+            wait (reads_seen == 24);
+
+            // Aguarda a conclusão da consulta.
+            wait (dut.state == 3'd3);
+            @(negedge clk);
+            @(negedge clk);
+
+            // Confere todas as palavras do registro.
+            for (k = 0; k < 24; k = k + 1) begin
+                if (flow_entry[k*16 +: 16] !== (16'hA000 + k)) begin
+                    $display(
+                        "ERRO: palavra %0d incorreta: obtida=%h, esperada=%h",
+                        k,
+                        flow_entry[k*16 +: 16],
+                        16'hA000 + k
+                    );
+                    errors = errors + 1;
+                end
+            end
+
+            if (reads_seen != 24) begin
+                $display("ERRO: total de leituras diferente de 24.");
+                errors = errors + 1;
+            end
+
+            if (wr_en !== 1'b0 || fin_valid !== 1'b0) begin
+                $display("ERRO: saida nao utilizada ficou ativa.");
+                errors = errors + 1;
+            end
+
+            if (errors == 0)
+                $display(
+                    "Teste %0d passou: hash=%0d, base=%0d",
+                    test_number, test_hash, calculated_base
+                );
+            else
+                $display(
+                    "Teste %0d terminou com erros acumulados: %0d",
+                    test_number, errors
+                );
+        end
+    endtask
+
+    // --------------------------------------------------
+    // Estímulos principais.
+    // --------------------------------------------------
     initial begin
         reset         = 1'b1;
         hash_index    = 16'd0;
@@ -110,64 +225,67 @@ module tb_controller;
         timestamp     = 80'd0;
         hash_valid    = 1'b0;
 
+        rd_data       = 16'd0;
+        rd_valid      = 1'b0;
         wr_done       = 1'b0;
         fin_done      = 1'b0;
 
+        pending_addr  = 21'd0;
+        pending_read  = 1'b0;
+        expected_base = 21'd0;
+
         reads_seen    = 0;
         errors        = 0;
-        expected_base = 21'd120;
+        test_number   = 0;
 
-        // Inicializa as 24 palavras do registro de teste.
-        for (i = 0; i < 24; i = i + 1)
-            memory[120 + i] = 16'hA000 + i;
+        for (i = 0; i < 4096; i = i + 1)
+            memory[i] = 16'd0;
 
+        // Mantém o reset por três bordas de descida.
         repeat (3) @(negedge clk);
         reset = 1'b0;
 
-        // Aplica os metadados de um pacote.
-        @(negedge clk);
+        // Teste 1: hash_index = 0, base = 0.
+        run_lookup(
+            16'd0,
+            104'h00000000000000000000000001,
+            16'd64,
+            80'h1001
+        );
 
-        hash_index    = 16'd5;
-        flow_key      = 104'h123456789ABCDEF123456789AB;
-        packet_length = 16'd128;
-        timestamp     = 80'h1234;
-        hash_valid    = 1'b1;
+        // Teste 2: hash_index = 5, base = 120.
+        run_lookup(
+            16'd5,
+            104'h123456789ABCDEF123456789AB,
+            16'd128,
+            80'h1234
+        );
 
-        @(negedge clk);
-        hash_valid = 1'b0;
+        // Teste 3: hash_index = 100, base = 2400.
+        run_lookup(
+            16'd100,
+            104'h00000000000000000000000064,
+            16'd256,
+            80'h5678
+        );
 
-        // Aguarda todas as 24 solicitacoes de leitura.
-        wait (reads_seen == 24);
-        wait (dut.state == dut.LOOKUP_DONE);
-
-        @(negedge clk);
-
-        // A primeira palavra ocupa os bits [15:0].
-        if (flow_entry[15:0] !== 16'hA000) begin
-            $display("ERRO: Primeira palavra incorreta: %h", flow_entry[15:0]);
-            errors = errors + 1;
-        end
-
-        // A ultima palavra ocupa os bits [383:368].
-        if (flow_entry[383:368] !== 16'hA017) begin
-            $display("ERRO: Ultima palavra incorreta: %h", flow_entry[383:368]);
-            errors = errors + 1;
-        end
-
-        if (errors == 0) begin
-            $display("PASSOU: 24 leituras nos enderecos 120 a 143.");
-            $display("PASSOU: flow_entry montado corretamente.");
-        end else begin
-            $display("FALHOU: %0d erro(s) encontrado(s).", errors);
-        end
+        if (errors == 0)
+            $display(
+                "PASSOU: todos os testes foram concluidos sem erros."
+            );
+        else
+            $display("FALHOU: total de erros = %0d", errors);
 
         $finish;
     end
 
+    // --------------------------------------------------
+    // Timeout de segurança.
+    // --------------------------------------------------
     initial begin
-        #10000;
-        $display("TIMEOUT: a simulacao nao terminou.");
-        $finish;
-    end
+    #300000;
+    $display("TIMEOUT: a simulacao nao terminou.");
+    $finish;
+end
 
 endmodule

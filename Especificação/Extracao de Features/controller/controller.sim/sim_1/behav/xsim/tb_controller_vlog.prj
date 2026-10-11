@@ -1,7 +1,7 @@
 # compile verilog/system verilog design source files
 verilog xil_defaultlib  --include "../../../../../../../../../../../../../../AMDDesignTools/2025.2/Vivado/data/rsb/busdef" \
-"../../../../../../../Especificação/Extracao de Features/controller.v" \
-"../../../../../../../Especificação/Extracao de Features/tb_controller.v" \
+"../../../../../controller.v" \
+"../../../../../tb_controller.v" \
 
 # compile glbl module
 verilog xil_defaultlib "glbl.v"
