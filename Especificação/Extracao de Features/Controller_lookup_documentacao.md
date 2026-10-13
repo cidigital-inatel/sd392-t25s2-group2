@@ -262,9 +262,9 @@ Os instantes são referentes à sequência de simulação descrita e devem ser c
 
 ### 3.3. O que verificar na forma de onda
 
-![Forma de onda – sinais do Controller e do modelo de memória](images/controller_lookup1.png)
+![Forma de onda – sinais do Controller e do modelo de memória](../../docs/images/controller_lookup1.png)
 
-![Forma de onda – contadores de verificação e endereço esperado](images/controller_lookup2.png)
+![Forma de onda – contadores de verificação e endereço esperado](../../docs/images/controller_lookup2.png)
 
 **Entrada do pacote:** `hash_valid` deve ser aceito quando o Controller estiver em `IDLE`. Os valores de `hash_index` dos três testes são `0x0000`, `0x0005` e `0x0064`.
 
