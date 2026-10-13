@@ -26,42 +26,65 @@ module controller (
 
     state_t state;
 
-    logic [20:0] base_addr;
-    logic [2:0]  word_index;
+    logic [15:0]  hash_index_reg;
+    logic [103:0] flow_key_reg;
+    logic [15:0]  packet_length_reg;
+    logic [79:0]  timestamp_reg;
 
-    always_comb begin
-        rd_en   = 1'b0;
-        rd_addr = 21'b0;
+    logic         start;
+    logic [20:0]  base_addr;
+    logic [2:0]   word_index;
 
-        case (state)
-            LOOKUP_REQ: begin
-                rd_en   = 1'b1;
-                rd_addr = base_addr + word_index;
+    // Captura dos metadados e geracao de start
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            hash_index_reg    <= '0;
+            flow_key_reg      <= '0;
+            packet_length_reg <= '0;
+            timestamp_reg     <= '0;
+            start             <= 1'b0;
+        end else begin
+            if (hash_valid) begin
+                hash_index_reg    <= hash_index;
+                flow_key_reg      <= flow_key;
+                packet_length_reg <= packet_length;
+                timestamp_reg     <= timestamp;
+
+                start <= 1'b1;
+            end else if (start) begin
+                start <= 1'b0;
             end
-
-            default: begin
-                rd_en   = 1'b0;
-                rd_addr = 21'b0;
-            end
-        endcase
+        end
     end
 
+    // Solicitacao de leitura
+    always_comb begin
+        rd_en   = 1'b0;
+        rd_addr = '0;
+
+        if (state == LOOKUP_REQ) begin
+            rd_en   = 1'b1;
+            rd_addr = base_addr + word_index;
+        end
+    end
+
+    // FSM do LOOKUP
     always_ff @(posedge clk) begin
         if (reset) begin
             state      <= IDLE;
-            base_addr  <= 21'b0;
-            word_index <= 3'b0;
-            flow_entry <= 384'b0;
+            base_addr  <= '0;
+            word_index <= '0;
+            flow_entry <= '0;
         end else begin
             case (state)
 
                 IDLE: begin
-                    word_index <= 3'b0;
+                    word_index <= '0;
 
-                    if (hash_valid) begin
-                        base_addr <= {1'b0, hash_index, 4'b0000};
-                        flow_entry <= 384'b0;
-                        state <= LOOKUP_REQ;
+                    if (start) begin
+                        base_addr  <= {1'b0, hash_index_reg, 4'b0000};
+                        flow_entry <= '0;
+                        state      <= LOOKUP_REQ;
                     end
                 end
 
@@ -77,19 +100,19 @@ module controller (
                             state <= LOOKUP_DONE;
                         end else begin
                             word_index <= word_index + 1'b1;
-                            state <= LOOKUP_REQ;
+                            state      <= LOOKUP_REQ;
                         end
                     end
                 end
 
                 LOOKUP_DONE: begin
                     state      <= IDLE;
-                    word_index <= 3'b0;
+                    word_index <= '0;
                 end
 
                 default: begin
                     state      <= IDLE;
-                    word_index <= 3'b0;
+                    word_index <= '0;
                 end
 
             endcase
