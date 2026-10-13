@@ -97,6 +97,7 @@ A interface usa dados e endereços de 32 bits e mantém sinais de solicitação/
 | Sinal | Direção | Largura | Função |
 |---|---|---|---|
 | `clk` | Entrada | 1 bit | Clock do sistema |
+| `rst` | Entrada | 1 bit | Reset dos sinais de controle |
 | `rd_en` | Entrada | 1 bit | Solicita uma leitura |
 | `rd_addr` | Entrada | 20 bits | Endereço da palavra de 32 bits a ser lida |
 | `rd_data` | Saída | 32 bits | Palavra lida da memória |
