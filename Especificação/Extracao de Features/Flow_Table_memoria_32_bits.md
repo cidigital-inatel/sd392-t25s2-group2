@@ -4,6 +4,8 @@ A Flow Table é uma memória que armazena o estado dos fluxos identificados pelo
 
 ## 1. Organização geral
 
+![Organização da Flow Table](docs/images/Flow_Table.png)
+
 | Parâmetro | Valor |
 |---|---|
 | Entrada lógica (registro completo) | 512 bits |
