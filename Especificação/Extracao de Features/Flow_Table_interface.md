@@ -45,6 +45,7 @@ onde `word_offset` varia de `0` a `15`.
 | Sinal | Largura | Direção | Origem | Descrição |
 |---|---:|---|---|---|
 | `clk` | 1 bit | Entrada | Sistema | Clock do módulo Flow Table. |
+| `rst` | 1 bit | Entrada | Sistema | Reset dos sinais de controle. |
 | `rd_en` | 1 bit | Entrada | Controller | Solicita uma operação de leitura. |
 | `rd_addr` | 20 bits | Entrada | Controller | Endereço físico da palavra de 32 bits a ser lida. |
 | `wr_en` | 1 bit | Entrada | Controller | Solicita uma operação de escrita. |
