@@ -1,0 +1,6 @@
+Time resolution is 1 ps
+Teste 1 passou: hash=0, base=0, leituras=5
+Teste 2 passou: hash=5, base=80, leituras=5
+Teste 3 passou: hash=100, base=1600, leituras=5
+PASSOU: todos os testes foram concluidos sem erros.
+$finish called at time : 590 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv" Line 334
