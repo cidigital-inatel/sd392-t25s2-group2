@@ -92,4 +92,4 @@ Ao final, a testbench imprime `Fim.` e chama `$finish`. Se alguma verificação 
 
 A forma de onda da simulação ilustra os sinais de clock e reset, as solicitações de leitura e escrita, os endereços e dados aplicados, e os sinais `rd_valid` e `wr_done`. Os dados lidos correspondem aos valores escritos nos endereços testados.
 
-![Forma de onda dos testes iniciais da Flow Table](Flow_Table_testes_iniciais_waveform.png)
+![Forma de onda dos testes iniciais da Flow Table](https://raw.githubusercontent.com/cidigital-inatel/sd392-t25s2-group2/main/docs/images/Flow_Table_testes_iniciais_waveform.png)
