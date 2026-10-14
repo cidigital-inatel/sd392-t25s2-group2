@@ -12,13 +12,6 @@ Nesta etapa foram desenvolvidos os arquivos necessários para estruturar e valid
 
 Também foi realizada a simulação completa no ModelSim, com validação automática dos metadados extraídos.
 
-Após a revisão da arquitetura, o timestamp utilizado pelo Packet Parser passou a adotar:
-
-```text
-largura = 80 bits
-unidade = nanossegundos
-```
-
 ---
 
 ## 2. `create_test_pcap.py`
@@ -102,18 +95,6 @@ A90DC0A8010A0808 FF 1 0 0 0000000000004995FF58
 2000F0E000000000 FC 1 1 1 0000000000004995FF58
 ```
 
-O valor:
-
-```text
-0000000000004995FF58
-```
-
-corresponde a:
-
-```text
-1_234_567_000 ns
-```
-
 Esse arquivo é lido diretamente pelo testbench durante a simulação.
 
 ---
@@ -166,13 +147,6 @@ O Parser também realiza:
 - geração de um pulso de `metadata_valid`.
 
 O timestamp é capturado no início do quadro por meio de `timestamp_in`.
-
-Na arquitetura atual, o timestamp utiliza:
-
-```text
-largura = 80 bits
-unidade = nanossegundos
-```
 
 ---
 
@@ -253,20 +227,6 @@ timestamp_in = 0000000000004995FF58
 ```
 
 O valor de `TKEEP = FC` indica seis bytes válidos na última palavra de 64 bits.
-
-O timestamp:
-
-```text
-0000000000004995FF58
-```
-
-corresponde a:
-
-```text
-1_234_567_000 ns
-```
-
-e foi corretamente capturado e mantido na saída `timestamp[79:0]`.
 
 Os metadados observados na saída do Parser foram:
 
@@ -371,9 +331,3 @@ metadados extraídos corretamente
 
 A primeira PoC do Packet Parser encontra-se funcional para o pacote TCP utilizado no teste e servirá como base para os próximos casos de verificação e para a futura integração com os demais módulos da etapa de Extração de Metadados.
 
-A PoC também está adequada ao contrato atualizado de timestamp:
-
-```text
-timestamp = 80 bits
-unidade   = nanossegundos
-```
