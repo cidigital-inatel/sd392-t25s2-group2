@@ -19,17 +19,11 @@ timestamp[79:0]
 valid
 ```
 
-O sinal anteriormente denominado `metadata_valid` será padronizado como:
-
-```text
-valid
-```
-
 O sinal `valid` deverá permanecer ativo durante um único ciclo quando os metadados de um pacote aceito estiverem completos e disponíveis.
 
 ---
 
-## 2. Tabela completa de testes unitários
+## 2. Tabela de testes unitários
 
 | ID | Cenário | Objetivo | Resultado esperado | Critério de aprovação |
 |---|---|---|---|---|
@@ -53,132 +47,7 @@ O sinal `valid` deverá permanecer ativo durante um único ciclo quando os metad
 
 ---
 
-## 3. Detalhamento dos grupos de teste
-
-### 3.1 Caminhos válidos
-
-Os primeiros testes devem validar os caminhos funcionais previstos no escopo atual:
-
-```text
-UT-01 — IPv4 + TCP
-UT-02 — IPv4 + UDP
-UT-03 — IPv4 com IHL > 5
-UT-13 — IPv4 com IHL = 15
-```
-
-Esses casos verificam se o Parser consegue extrair corretamente os metadados em diferentes configurações válidas do cabeçalho IPv4.
-
-Para `IHL = 5`:
-
-```text
-IPv4 Header Length = 20 bytes
-transport_offset   = 14 + 20
-                   = 34 bytes
-```
-
-Para `IHL = 15`:
-
-```text
-IPv4 Header Length = 60 bytes
-transport_offset   = 14 + 60
-                   = 74 bytes
-```
-
----
-
-### 3.2 Casos de descarte
-
-Os testes de descarte deverão comprovar que quadros fora do escopo ou inválidos não geram metadados válidos:
-
-```text
-UT-04 — protocolo não suportado
-UT-05 — EtherType não IPv4
-UT-06 — IPv4 fragmentado
-UT-07 — TUSER inválido
-UT-12 — IHL inválido
-UT-14 — quadro truncado
-```
-
-Em todos esses casos, o comportamento esperado é:
-
-```text
-valid = 0
-```
-
-e retorno seguro da FSM ao estado:
-
-```text
-IDLE
-```
-
----
-
-### 3.3 Robustez da interface
-
-Os testes relacionados à interface devem verificar principalmente o tratamento correto de `TKEEP`, `TLAST` e das condições de término do quadro:
-
-```text
-UT-08 — último beat parcial
-UT-14 — TLAST antecipado
-UT-16 — TKEEP parcial em posição crítica
-```
-
-O Parser deve considerar somente bytes efetivamente válidos, evitando que preenchimentos ou bytes mascarados sejam utilizados durante a extração dos campos.
-
----
-
-### 3.4 Operação contínua
-
-A validação também deverá incluir pacotes enviados em sequência:
-
-```text
-UT-09 — dois pacotes consecutivos
-UT-10 — TCP seguido de UDP
-UT-15 — pacotes consecutivos sem ciclo ocioso
-UT-17 — timestamps diferentes
-```
-
-No caso mais crítico, o comportamento esperado é:
-
-```text
-último beat do pacote 1
-TVALID = 1
-TLAST  = 1
-        ↓
-ciclo seguinte
-        ↓
-primeiro beat do pacote 2
-TVALID = 1
-TLAST  = 0
-```
-
-O Parser deve reconhecer corretamente o início do novo quadro sem depender de um ciclo com `TVALID = 0`.
-
----
-
-### 3.5 Reset
-
-O teste `UT-11` deverá validar o comportamento do Parser quando o reset ocorrer durante o recebimento de um quadro.
-
-O comportamento esperado é:
-
-```text
-reset
-  ↓
-FSM → IDLE
-  ↓
-valid = 0
-  ↓
-registradores internos reinicializados
-  ↓
-próximo quadro processado normalmente
-```
-
-Nenhum conjunto parcial de metadados deve ser liberado após o reset.
-
----
-
-## 4. Critérios gerais de aprovação
+## 3. Critérios gerais de aprovação
 
 A validação funcional do Packet Parser será considerada satisfatória quando:
 
@@ -194,13 +63,13 @@ A validação funcional do Packet Parser será considerada satisfatória quando:
 
 ---
 
-## 5. Resultado esperado da etapa
+## 4. Resultado esperado da etapa
 
 Após a execução dos testes unitários, deverá ser possível consolidar uma matriz final de resultados:
 
 | ID | Teste | Resultado |
 |---|---|---|
-| UT-01 | IPv4 + TCP válido | Pendente |
+| UT-01 | IPv4 + TCP válido | Validado |
 | UT-02 | IPv4 + UDP válido | Pendente |
 | UT-03 | IPv4 com IHL > 5 | Pendente |
 | UT-04 | Protocolo não suportado | Pendente |
