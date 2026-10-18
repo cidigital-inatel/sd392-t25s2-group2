@@ -1,6 +1,6 @@
 // flow_table.sv
 // Memoria comportamental da Flow Table: 65.536 entradas x 16 palavras x 32 bits.
-// A memoria nao inicializa seu conteudo.
+// A memoria e inicializada com zero na declaracao (todos os bits valid = 0).
 // Leitura sincrona: rd_valid fica ativo no ciclo seguinte ao pedido.
 // Escrita: wr_done fica ativo no ciclo seguinte ao pedido.
 
@@ -23,7 +23,8 @@ module flow_table #(
     output logic                  wr_done
 );
 
-    logic [DATA_WIDTH-1:0] mem [0:DEPTH-1];
+    // Inicializacao em zero: evita X na simulacao e garante valid = 0 apos o power-up.
+    logic [DATA_WIDTH-1:0] mem [0:DEPTH-1] = '{default: '0};
 
     // O reset limpa apenas os sinais de controle; nao apaga toda a memoria.
     always_ff @(posedge clk) begin

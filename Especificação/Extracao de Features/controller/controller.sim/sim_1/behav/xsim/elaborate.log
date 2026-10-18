@@ -5,17 +5,5 @@ Running: C:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe --incr 
 Using 2 slave threads.
 Starting static elaboration
 Pass Through NonSizing Optimizer
-WARNING: [VRFC 10-3818] variable 'rd_data' is driven by invalid combination of procedural drivers [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv:17]
-WARNING: [VRFC 10-2921] 'rd_data' driven by this always_ff block should not be driven by any other process [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv:52]
-WARNING: [VRFC 10-3818] variable 'rd_valid' is driven by invalid combination of procedural drivers [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv:18]
-WARNING: [VRFC 10-3818] variable 'pending_read' is driven by invalid combination of procedural drivers [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv:23]
-WARNING: [VRFC 10-3818] variable 'pending_addr' is driven by invalid combination of procedural drivers [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv:24]
 Completed static elaboration
-Starting simulation data flow analysis
-WARNING: [XSIM 43-4099] "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/controller_base.sv" Line 2. Module controller doesn't have a timescale but at least one module in design has a timescale.
-Completed simulation data flow analysis
-Time Resolution for simulation is 1ps
-Compiling module xil_defaultlib.controller
-Compiling module xil_defaultlib.tb_controller
-Compiling module xil_defaultlib.glbl
-Built simulation snapshot tb_controller_behav
+INFO: [XSIM 43-4323] No Change in HDL. Linking previously generated obj files to create kernel

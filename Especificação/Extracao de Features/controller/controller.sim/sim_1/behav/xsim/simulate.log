@@ -1,6 +1,4 @@
 Time resolution is 1 ps
-PASSOU: hash_index=0, base=0, leituras=5
-PASSOU: hash_index=5, base=80, leituras=5
-PASSOU: hash_index=100, base=1600, leituras=5
-TODOS OS TESTES PASSARAM!
-$finish called at time : 620 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv" Line 205
+PASSOU: MISS idx 10
+PASSOU: HIT idx 10
+PASSOU: COLLISION chave diferente

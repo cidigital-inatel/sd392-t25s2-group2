@@ -1,10 +1,16 @@
-
 `timescale 1ns/1ps
 
 module tb_controller;
 
-    logic clk;
-    logic reset;
+    localparam logic [1:0] RESULT_MISS      = 2'b01;
+    localparam logic [1:0] RESULT_HIT       = 2'b10;
+    localparam logic [1:0] RESULT_COLLISION = 2'b11;
+
+    localparam logic [103:0] KEY_A = 104'h123456789ABCDEF123456789AB;
+    localparam logic [103:0] KEY_B = 104'h00000000000000000000000001;
+
+    logic clk = 1'b0;
+    logic rst = 1'b1;
 
     logic [15:0]  hash_index;
     logic [103:0] flow_key;
@@ -12,203 +18,312 @@ module tb_controller;
     logic [79:0]  timestamp;
     logic         hash_valid;
 
-    logic         rd_en;
-    logic [20:0]  rd_addr;
-    logic [31:0]  rd_data;
-    logic         rd_valid;
-    logic [383:0] flow_entry;
+    logic         rd_en, rd_valid, wr_en, wr_done;
+    logic [19:0]  rd_addr, wr_addr;
+    logic [31:0]  rd_data, wr_data;
 
-    logic [31:0] memory [0:4095];
+    logic [415:0] flow_entry;
+    logic         fin_valid;
+    logic         fin_done;
+    logic [1:0]   lookup_result;
+    logic         lookup_done;
 
-    logic pending_read;
-    logic [20:0] pending_addr;
+    integer read_count  = 0;
+    integer write_count = 0;
+    integer errors      = 0;
 
-    logic [20:0] expected_base;
+    logic [15:0] cur_idx = '0;
+    logic        start_q = 1'b0;
 
-    integer errors;
-    integer reads_seen;
-    integer i;
+    assign fin_done = 1'b0;   // Finalizer nao faz parte desta etapa
 
-    controller dut (
-        .clk           (clk),
-        .reset         (reset),
-        .hash_index    (hash_index),
-        .flow_key      (flow_key),
-        .packet_length (packet_length),
-        .timestamp     (timestamp),
-        .hash_valid    (hash_valid),
-        .rd_en         (rd_en),
-        .rd_addr       (rd_addr),
-        .rd_data       (rd_data),
-        .rd_valid      (rd_valid),
-        .flow_entry    (flow_entry)
-    );
-
-    // Clock de 100 MHz: periodo de 10 ns
-    initial clk = 1'b0;
     always #5 clk = ~clk;
 
-    // Modelo comportamental da Flow Table
-    always_ff @(posedge clk) begin
-        if (reset) begin
-            rd_data      <= '0;
-            rd_valid     <= 1'b0;
-            pending_read <= 1'b0;
-            pending_addr <= '0;
-        end else begin
-            rd_valid <= pending_read;
+    controller dut (
+        .clk(clk), .rst(rst),
+        .hash_index(hash_index), .flow_key(flow_key),
+        .packet_length(packet_length), .timestamp(timestamp),
+        .hash_valid(hash_valid),
+        .rd_en(rd_en), .rd_addr(rd_addr),
+        .rd_data(rd_data), .rd_valid(rd_valid),
+        .wr_en(wr_en), .wr_addr(wr_addr),
+        .wr_data(wr_data), .wr_done(wr_done),
+        .flow_entry(flow_entry),
+        .fin_valid(fin_valid), .fin_done(fin_done),
+        .lookup_result(lookup_result), .lookup_done(lookup_done)
+    );
 
-            if (pending_read)
-                rd_data <= memory[pending_addr];
+    // Porta de escrita do testbench (pre-carga da memoria).
+    // So e usada com o Controller em IDLE.
+    logic        tb_wr_en   = 1'b0;
+    logic [19:0] tb_wr_addr = '0;
+    logic [31:0] tb_wr_data = '0;
 
-            pending_read <= rd_en;
+    wire         ft_wr_en   = tb_wr_en | wr_en;
+    wire [19:0]  ft_wr_addr = tb_wr_en ? tb_wr_addr : wr_addr;
+    wire [31:0]  ft_wr_data = tb_wr_en ? tb_wr_data : wr_data;
 
-            if (rd_en)
-                pending_addr <= rd_addr;
-        end
-    end
+    flow_table ft (
+        .clk(clk), .rst(rst),
+        .rd_en(rd_en), .rd_addr(rd_addr),
+        .rd_data(rd_data), .rd_valid(rd_valid),
+        .wr_en(ft_wr_en), .wr_addr(ft_wr_addr),
+        .wr_data(ft_wr_data), .wr_done(wr_done)
+    );
 
-    // Monitor de enderecos de leitura
+    // ---------------- Monitores ----------------
     always @(posedge clk) begin
-        if (reset) begin
-            reads_seen <= 0;
-        end else if (rd_en) begin
-            if (rd_addr !== expected_base + reads_seen) begin
-                $error(
-                    "Endereco incorreto: esperado=%0d, recebido=%0d",
-                    expected_base + reads_seen,
-                    rd_addr
-                );
+        if (!rst) begin
+            if (rd_en) read_count  <= read_count + 1;
+            if (wr_en) write_count <= write_count + 1;
+
+            // Todo acesso deve ficar dentro das 16 palavras da entrada
+            if ((rd_en && rd_addr[19:4] !== cur_idx) ||
+                (wr_en && wr_addr[19:4] !== cur_idx)) begin
+                $error("Acesso fora da entrada %0d (rd=%0d wr=%0d)",
+                       cur_idx, rd_addr, wr_addr);
                 errors = errors + 1;
             end
 
-            reads_seen <= reads_seen + 1;
+            // start deve ser um pulso de 1 ciclo
+            start_q <= dut.start;
+            if (dut.start && start_q) begin
+                $error("start durou mais de 1 ciclo");
+                errors = errors + 1;
+            end
         end
     end
 
-    // Executa um cenario de LOOKUP
-    task automatic run_lookup(input logic [15:0] test_hash);
-        logic [20:0] test_base;
-        integer j;
-
+    // ---------------- Tasks ----------------
+    task automatic send_packet(
+        input logic [15:0]  idx,
+        input logic [103:0] key,
+        input logic [15:0]  length_bytes,
+        input logic [79:0]  ts
+    );
         begin
-            test_base = {1'b0, test_hash, 4'b0000};
-
-            // Aguarda o Controller estar em IDLE
             @(negedge clk);
-            while (dut.state != dut.IDLE)
-                @(negedge clk);
-
-            // Prepara a memoria e os contadores
-            expected_base = test_base;
-            reads_seen = 0;
-
-            for (j = 0; j < 5; j = j + 1)
-                memory[test_base + j] = 32'hA0000000 + j;
-
-            // Aplica os metadados
-            hash_index    = test_hash;
-            flow_key      = 104'h123456789ABCDEF123456789AB;
-            packet_length = 16'd128;
-            timestamp     = 80'd1234;
+            cur_idx       = idx;
+            hash_index    = idx;
+            flow_key      = key;
+            packet_length = length_bytes;
+            timestamp     = ts;
             hash_valid    = 1'b1;
 
-            // O Controller captura os metadados nesta borda
             @(negedge clk);
-            hash_valid = 1'b0;
-
-            // Confirma a captura e o pulso interno de start
-            wait (dut.start == 1'b1);
-
-            // Aguarda a conclusao das cinco leituras
-            wait (dut.state == dut.LOOKUP_DONE);
-            @(negedge clk);
-
-            // Verifica as palavras recebidas
-            for (j = 0; j < 5; j = j + 1) begin
-                if (flow_entry[j*32 +: 32] !==
-                    (32'hA0000000 + j)) begin
-                    $error(
-                        "W%0d incorreta: esperado=%h, recebido=%h",
-                        j,
-                        32'hA0000000 + j,
-                        flow_entry[j*32 +: 32]
-                    );
-                    errors = errors + 1;
-                end
-            end
-
-            // Verifica os bits nao utilizados
-            if (flow_entry[383:160] !== 224'b0) begin
-                $error("flow_entry[383:160] deveria permanecer zerado.");
-                errors = errors + 1;
-            end
-
-            // Verifica a quantidade de leituras
-            if (reads_seen != 5) begin
-                $error(
-                    "Quantidade incorreta de leituras: %0d",
-                    reads_seen
-                );
-                errors = errors + 1;
-            end
-
-            if (errors == 0) begin
-                $display(
-                    "PASSOU: hash_index=%0d, base=%0d, leituras=%0d",
-                    test_hash,
-                    test_base,
-                    reads_seen
-                );
-            end
-
-            // Aguarda o retorno a IDLE antes do proximo teste
-            wait (dut.state == dut.IDLE);
-            @(negedge clk);
+            hash_valid    = 1'b0;
+            // Embaralha as entradas: o Controller ja deve ter capturado tudo
+            hash_index    = $urandom;
+            flow_key      = {$urandom, $urandom, $urandom, $urandom};
+            packet_length = $urandom;
+            timestamp     = {$urandom, $urandom, $urandom};
         end
     endtask
 
-    // Inicializacao e execucao dos testes
+    task automatic wait_done;
+        integer timeout;
+        begin
+            timeout = 0;
+            while (lookup_done !== 1'b1 && timeout < 2000) begin
+                @(negedge clk);
+                timeout = timeout + 1;
+            end
+            if (timeout >= 2000)
+                $fatal(1, "TIMEOUT esperando lookup_done");
+            #1;
+        end
+    endtask
+
+    task automatic check_word(
+        input logic [19:0] address,
+        input logic [31:0] expected,
+        input string       label
+    );
+        begin
+            if (ft.mem[address] !== expected) begin
+                $error("FALHA %s: end=%0d esperado=%h obtido=%h",
+                       label, address, expected, ft.mem[address]);
+                errors = errors + 1;
+            end
+        end
+    endtask
+
+    // Confere o registro completo W0..W12
+    task automatic check_entry(
+        input logic [15:0]  idx,
+        input logic [103:0] key,
+        input logic [31:0]  pkts,
+        input logic [31:0]  bytes,
+        input logic [79:0]  first_ts,
+        input logic [79:0]  last_ts
+    );
+        begin
+            check_word({idx, 4'd0},  32'd1,                    "W0 valid");
+            check_word({idx, 4'd1},  key[31:0],                "W1 key[31:0]");
+            check_word({idx, 4'd2},  key[63:32],               "W2 key[63:32]");
+            check_word({idx, 4'd3},  key[95:64],               "W3 key[95:64]");
+            check_word({idx, 4'd4},  {24'b0, key[103:96]},     "W4 key[103:96]");
+            check_word({idx, 4'd5},  pkts,                     "W5 packet_count");
+            check_word({idx, 4'd6},  bytes,                    "W6 byte_count");
+            check_word({idx, 4'd7},  first_ts[31:0],           "W7 first_ts");
+            check_word({idx, 4'd8},  first_ts[63:32],          "W8 first_ts");
+            check_word({idx, 4'd9},  {16'b0, first_ts[79:64]}, "W9 first_ts");
+            check_word({idx, 4'd10}, last_ts[31:0],            "W10 last_ts");
+            check_word({idx, 4'd11}, last_ts[63:32],           "W11 last_ts");
+            check_word({idx, 4'd12}, {16'b0, last_ts[79:64]},  "W12 last_ts");
+        end
+    endtask
+
+    // Escreve uma palavra na Flow Table pela porta de escrita (Controller em IDLE)
+    task automatic poke(
+        input logic [19:0] addr,
+        input logic [31:0] data
+    );
+        begin
+            @(negedge clk);
+            tb_wr_en   = 1'b1;
+            tb_wr_addr = addr;
+            tb_wr_data = data;
+            @(negedge clk);
+            tb_wr_en   = 1'b0;
+        end
+    endtask
+
+    // Pre-carrega valid e flow_key (com lixo opcional em W4[31:8])
+    task automatic preload(
+        input logic [15:0]  idx,
+        input logic [31:0]  w0,
+        input logic [103:0] key,
+        input logic [23:0]  w4_junk
+    );
+        begin
+            poke({idx, 4'd0}, w0);
+            poke({idx, 4'd1}, key[31:0]);
+            poke({idx, 4'd2}, key[63:32]);
+            poke({idx, 4'd3}, key[95:64]);
+            poke({idx, 4'd4}, {w4_junk, key[103:96]});
+        end
+    endtask
+
+    // Envia um pacote e confere resultado, leituras e escritas
+    task automatic run_case(
+        input string        name,
+        input logic [15:0]  idx,
+        input logic [103:0] key,
+        input logic [15:0]  len,
+        input logic [79:0]  ts,
+        input logic [1:0]   exp_res,
+        input integer       exp_rd,
+        input integer       exp_wr
+    );
+        integer e0;
+        begin
+            e0 = errors;
+            read_count  = 0;
+            write_count = 0;
+
+            send_packet(idx, key, len, ts);
+            wait_done();
+
+            if (lookup_result !== exp_res) begin
+                $error("%s: resultado=%b esperado=%b", name, lookup_result, exp_res);
+                errors = errors + 1;
+            end
+            if (read_count != exp_rd) begin
+                $error("%s: leituras=%0d esperado=%0d", name, read_count, exp_rd);
+                errors = errors + 1;
+            end
+            if (write_count != exp_wr) begin
+                $error("%s: escritas=%0d esperado=%0d", name, write_count, exp_wr);
+                errors = errors + 1;
+            end
+
+            if (errors == e0)
+                $display("PASSOU: %s", name);
+        end
+    endtask
+
+    // ---------------- Cenarios ----------------
+    localparam logic [79:0] TS1 = 80'h0000_0000_0000_0000_1234;
+    localparam logic [79:0] TS2 = 80'h0000_0000_0000_0000_5678;
+
     initial begin
-        reset         = 1'b1;
         hash_index    = '0;
         flow_key      = '0;
         packet_length = '0;
         timestamp     = '0;
         hash_valid    = 1'b0;
 
-        rd_data       = '0;
-        rd_valid      = 1'b0;
-        pending_read  = 1'b0;
-        pending_addr  = '0;
+        repeat (4) @(negedge clk);
+        rst = 1'b0;
+        repeat (2) @(negedge clk);
 
-        expected_base = '0;
-        errors        = 0;
-        reads_seen    = 0;
+        // 1) MISS: entrada vazia (5 leituras, 13 escritas)
+        run_case("MISS idx 10", 16'd10, KEY_A, 16'd100, TS1, RESULT_MISS, 5, 13);
+        check_entry(16'd10, KEY_A, 32'd1, 32'd100, TS1, TS1);
 
-        for (i = 0; i < 4096; i = i + 1)
-            memory[i] = '0;
+        // 2) HIT: mesma chave (7 leituras, 5 escritas)
+        run_case("HIT idx 10", 16'd10, KEY_A, 16'd50, TS2, RESULT_HIT, 7, 5);
+        check_entry(16'd10, KEY_A, 32'd2, 32'd150, TS1, TS2);
+
+        // 3) COLLISION: chave totalmente diferente (5 leituras, 0 escritas)
+        run_case("COLLISION chave diferente", 16'd10, KEY_B, 16'd77, 80'h9999,
+                 RESULT_COLLISION, 5, 0);
+        check_entry(16'd10, KEY_A, 32'd2, 32'd150, TS1, TS2);
+
+        // 4) COLLISION: difere so no bit 0
+        run_case("COLLISION bit 0", 16'd10, KEY_A ^ 104'h1, 16'd10, 80'h1,
+                 RESULT_COLLISION, 5, 0);
+
+        // 5) COLLISION: difere so no bit 103 (W4[7])
+        run_case("COLLISION bit 103", 16'd10, KEY_A ^ (104'h1 << 103), 16'd10, 80'h1,
+                 RESULT_COLLISION, 5, 0);
+        check_entry(16'd10, KEY_A, 32'd2, 32'd150, TS1, TS2);
+
+        // 6) HIT com lixo em W0[31:1] e W4[31:8]: deve continuar HIT
+        preload(16'd30, 32'hFFFFFFFF, KEY_A, 24'hABCDEF);
+        poke({16'd30, 4'd5}, 32'd7);
+        poke({16'd30, 4'd6}, 32'd700);
+        poke({16'd30, 4'd7}, 32'h1111);
+        run_case("HIT com bits reservados sujos", 16'd30, KEY_A, 16'd20, TS2,
+                 RESULT_HIT, 7, 5);
+        check_word({16'd30, 4'd0},  32'hFFFFFFFF, "HIT nao reescreve W0");
+        check_word({16'd30, 4'd5},  32'd8,        "HIT W5");
+        check_word({16'd30, 4'd6},  32'd720,      "HIT W6");
+        check_word({16'd30, 4'd7},  32'h1111,     "HIT preserva first_ts");
+        check_word({16'd30, 4'd10}, 32'h5678,     "HIT last_ts");
+
+        // 7) valid usa so o bit 0: W0 = FFFFFFFE -> MISS
+        preload(16'd40, 32'hFFFFFFFE, 104'hDEADBEEF, 24'hFFFFFF);
+        run_case("MISS com W0 = FFFFFFFE", 16'd40, KEY_A, 16'd64, TS1,
+                 RESULT_MISS, 5, 13);
+        check_entry(16'd40, KEY_A, 32'd1, 32'd64, TS1, TS1);
+
+        // 8) Limites do hash_index
+        run_case("MISS idx 0",     16'h0000, KEY_A, 16'd10, TS1, RESULT_MISS, 5, 13);
+        check_entry(16'h0000, KEY_A, 32'd1, 32'd10, TS1, TS1);
+        run_case("MISS idx 65535", 16'hFFFF, KEY_A, 16'd11, TS1, RESULT_MISS, 5, 13);
+        check_entry(16'hFFFF, KEY_A, 32'd1, 32'd11, TS1, TS1);
+
+        // 9) Pacotes em sequencia no mesmo fluxo
+        run_case("Sequencia: MISS", 16'd20, KEY_A, 16'd10, TS1, RESULT_MISS, 5, 13);
+        run_case("Sequencia: HIT 1", 16'd20, KEY_A, 16'd10, TS2, RESULT_HIT, 7, 5);
+        run_case("Sequencia: HIT 2", 16'd20, KEY_A, 16'd10, 80'h9ABC, RESULT_HIT, 7, 5);
+        check_entry(16'd20, KEY_A, 32'd3, 32'd30, TS1, 80'h9ABC);
 
         repeat (3) @(negedge clk);
-        reset = 1'b0;
-
-        run_lookup(16'd0);
-        run_lookup(16'd5);
-        run_lookup(16'd100);
 
         if (errors == 0)
             $display("TODOS OS TESTES PASSARAM!");
         else
             $display("TESTES FINALIZADOS COM %0d ERRO(S).", errors);
 
-        #20;
         $finish;
     end
 
-    // Timeout de seguranca
     initial begin
-        #100000;
-        $fatal(1, "TIMEOUT: o LOOKUP nao terminou.");
+        #2000000;
+        $fatal(1, "TIMEOUT global");
     end
 
 endmodule
