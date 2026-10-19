@@ -1,0 +1,92 @@
+Resultado registrado no console: TESTE PASSOU
+Pacotes lidos e processados: 7 de 7
+Palavras AXI-Stream processadas: 69
+Total de bytes nos quadros: 535
+Erros reportados pela testbench/mockup: 0
+Tempo final de simulacao registrado: 1375 ns
+Formato do arquivo: PCAP classico
+Tipo de enlace (DLT): 1 - Ethernet (DLT_EN10MB)
+Resolucao da fracao temporal do PCAP: microssegundos
+
+Observacao: os resultados acima demonstram a execucao com o modulo mac_rx_mockup. Eles nao comprovam, por si so, a integracao ou o funcionamento de um MAC real.
+
+2. TIPOS DE PACOTES COBERTOS
+
+N.  Tipo identificado             Protocolo/camada       Bytes   Timestamp (ns)
+1   TCP SYN                       Ethernet II / IPv4 / TCP 54    0
+2   TCP SYN-ACK                   Ethernet II / IPv4 / TCP 54    100000000
+3   TCP ACK                       Ethernet II / IPv4 / TCP 54    200000000
+4   Requisicao HTTP sobre TCP     Ethernet II / IPv4 / TCP 122   300000000
+5   Resposta HTTP sobre TCP       Ethernet II / IPv4 / TCP 125   400000000
+6   UDP Request                   Ethernet II / IPv4 / UDP 63    500000000
+7   UDP Response                  Ethernet II / IPv4 / UDP 63    600000000
+
+Todos os pacotes deste PCAP usam quadros Ethernet II com IPv4. Os timestamps absolutos tem segundos = 1700000000; a coluna de timestamp acima mostra o campo de nanossegundos dentro desse segundo.
+
+3. CASOS DE TESTE EXECUTADOS E RESULTADOS
+
+TC-01 - Compilacao dos arquivos SystemVerilog no Vivado/XSim
+Resultado: APROVADO
+Evidencia: as etapas de compile e elaborate foram concluidas.
+
+TC-02 - Abertura direta do arquivo PCAP pela testbench
+Resultado: APROVADO
+Evidencia: console informou "PCAP aberto com sucesso".
+
+TC-03 - Interpretacao do cabecalho global PCAP
+Resultado: APROVADO
+Evidencia: link-type DLT_EN10MB (1) e fracao em microssegundos foram identificados.
+
+TC-04 - Leitura e processamento dos sete registros
+Resultado: APROVADO
+Evidencia: foram processados os pacotes 1 a 7.
+
+TC-05 - Conversao do timestamp para o formato de 80 bits
+Resultado: APROVADO para os sete pacotes deste arquivo
+Evidencia: Seconds em [79:32], Nanoseconds em [31:0], e timestamp capturado pelo mockup igual ao esperado.
+
+TC-06 - Transmissao dos quadros em palavras de 64 bits
+Resultado: APROVADO
+Evidencia: total de 69 palavras AXI-Stream.
+
+TC-07 - Verificacao de TKEEP e TLAST
+Resultado: APROVADO para os sete quadros deste arquivo
+Evidencia: TKEEP corresponde ao numero de bytes validos do ultimo beat e TLAST foi observado no ultimo beat de cada quadro.
+
+TC-08 - Conferencia dos contadores de bytes e palavras
+Resultado: APROVADO
+Evidencia: os valores observados coincidiram com os esperados em cada pacote.
+
+TC-09 - Conferencia do timestamp capturado pelo mockup
+Resultado: APROVADO
+Evidencia: packet_timestamp coincidiu com o timestamp esperado em todos os sete pacotes.
+
+TC-10 - Verificacao do indicador packet_error
+Resultado: APROVADO
+Evidencia: packet_error = 0 em todos os pacotes concluidos.
+
+TC-11 - Verificacao inicial do reset
+Resultado: SEM ERRO REPORTADO
+Evidencia: a testbench terminou sem incrementar o contador de erros nessa verificacao.
+
+TC-12 - Verificacao do resultado final da simulacao
+Resultado: APROVADO
+Evidencia: console exibiu "TESTE PASSOU", "Pacotes processados: 7" e "Palavras processadas: 69".
+
+4. CASOS AINDA NAO EXECUTADOS OU NAO COMPROVADOS
+
+- PCAP truncado ou cabecalho global invalido.
+- PCAP com timestamps em nanossegundos.
+- Timestamp fora de ordem ou fracao temporal invalida.
+- Tipo de enlace nao suportado.
+- Pacotes de tamanho minimo, limites de comprimento e outros casos de TKEEP.
+- Reset durante a transmissao de um quadro.
+- Verificacao independente byte a byte na saida de um MAC real.
+- Integracao e simulacao com o MAC real.
+- Compatibilidade de TUSER, TREADY, clock, reset e timestamp com a interface definitiva do MAC.
+
+5. CONCLUSAO
+
+A execucao demonstrou que a testbench le diretamente o PCAP classico utilizado, converte os timestamps para 80 bits e fornece os quadros ao modulo mac_rx_mockup. Os sete pacotes foram concluidos; a simulacao reportou zero erros e totalizou 69 palavras AXI-Stream.
+
+A cobertura demonstrada limita-se aos sete quadros presentes no arquivo de entrada e ao mockup. Antes de declarar o teste do projeto concluido, e necessario confirmar o escopo de pacotes com Herman, revisar a interface do MAC real e executar a mesma validacao com o DUT definitivo.
