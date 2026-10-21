@@ -4,10 +4,11 @@
 module packet_parser_tb;
 
     // Timestamp do PCAP em nanossegundos.
+    // O valor varia a cada execução e é lido do input_stream.txt.
     localparam int TS_WIDTH = 80;
 
     logic clk;
-    logic reset_n;
+    logic reset;
 
     logic [63:0] TDATA;
     logic [7:0]  TKEEP;
@@ -23,7 +24,7 @@ module packet_parser_tb;
     logic [7:0]  protocol;
     logic [15:0] packet_length;
     logic [TS_WIDTH-1:0] timestamp;
-    logic        metadata_valid;
+    logic        valid;
 
     integer fd;
     integer rc;
@@ -44,7 +45,7 @@ module packet_parser_tb;
         .TS_WIDTH(TS_WIDTH)
     ) dut (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .TDATA(TDATA),
         .TKEEP(TKEEP),
         .TVALID(TVALID),
@@ -58,7 +59,7 @@ module packet_parser_tb;
         .protocol(protocol),
         .packet_length(packet_length),
         .timestamp(timestamp),
-        .metadata_valid(metadata_valid)
+        .valid(valid)
     );
 
     initial clk = 1'b0;
@@ -106,7 +107,7 @@ module packet_parser_tb;
             end else
                 $display("PASS packet_length = %0d", packet_length);
 
-            // Nao ha mais valor fixo "1000".
+            // Nao ha valor fixo de timestamp.
             // O valor esperado e lido da primeira transferencia do arquivo.
             if (timestamp !== expected_timestamp) begin
                 $display("ERRO timestamp: esperado %0d ns, recebido %0d ns",
@@ -125,7 +126,7 @@ module packet_parser_tb;
     endtask
 
     initial begin
-        reset_n            = 1'b0;
+        reset            = 1'b1;
         TDATA              = 64'd0;
         TKEEP              = 8'd0;
         TVALID             = 1'b0;
@@ -135,8 +136,12 @@ module packet_parser_tb;
         expected_timestamp = '0;
         first_transfer_seen = 0;
 
+        // Reset sincrono, ativo em nivel alto.
+        // Mantem reset=1 por tres bordas de subida e libera no negedge
+        // para evitar disputa com o always_ff do DUT.
         repeat (3) @(posedge clk);
-        reset_n = 1'b1;
+        @(negedge clk);
+        reset = 1'b0;
 
         fd = $fopen("input_stream.txt", "r");
         if (fd == 0)
@@ -147,7 +152,7 @@ module packet_parser_tb;
         rc = $fgets(header_line, fd);
 
         // Formato:
-        // TDATA TKEEP TVALID TLAST TUSER TIMESTAMP
+        // TDATA TKEEP TVALID TLAST TUSER TIMESTAMP_HEX
         while (!$feof(fd)) begin
             rc = $fscanf(
                 fd,
@@ -191,19 +196,19 @@ module packet_parser_tb;
             $fatal(1, "Nenhuma transferencia valida foi lida de input_stream.txt");
 
         timeout = 0;
-        while (!metadata_valid && timeout < 20) begin
+        while (!valid && timeout < 20) begin
             @(posedge clk);
             timeout = timeout + 1;
         end
 
-        if (!metadata_valid)
-            $fatal(1, "Timeout: metadata_valid nao foi gerado");
+        if (!valid)
+            $fatal(1, "Timeout: valid nao foi gerado");
 
         check_result();
 
         @(posedge clk);
-        if (metadata_valid !== 1'b0)
-            $fatal(1, "metadata_valid deveria retornar a 0 apos um ciclo");
+        if (valid !== 1'b0)
+            $fatal(1, "valid deveria retornar a 0 apos um ciclo");
 
         $finish;
     end
