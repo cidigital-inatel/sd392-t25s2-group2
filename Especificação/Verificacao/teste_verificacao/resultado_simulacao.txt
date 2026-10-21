@@ -1,0 +1,86 @@
+# Resultado da simulacao do MAC RX mockup
+# Entrada direta: C:/Users/Dell/OneDrive/Documentos/teste_dani/teste_bia_dani.pcap
+# Timestamp IEEE 1588 ToD: 80 bits = Seconds[79:32] + Nanoseconds[31:0]
+# Campos: pacote word pcap_sec pcap_frac tsu80 tdata tkeep tvalid tlast tuser
+
+pcap=1 word=0 pcap_sec=1700000000 pcap_frac=0 tsu80=00006553f10000000000 ts_sec=1700000000 ts_ns=0 tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=1 word=1 pcap_sec=1700000000 pcap_frac=0 tsu80=00006553f10000000000 ts_sec=1700000000 ts_ns=0 tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=1 word=2 pcap_sec=1700000000 pcap_frac=0 tsu80=00006553f10000000000 ts_sec=1700000000 ts_ns=0 tdata=0640004001002800 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=1 word=3 pcap_sec=1700000000 pcap_frac=0 tsu80=00006553f10000000000 ts_sec=1700000000 ts_ns=0 tdata=a8c00a0aa8c060a5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=1 word=4 pcap_sec=1700000000 pcap_frac=0 tsu80=00006553f10000000000 ts_sec=1700000000 ts_ns=0 tdata=0000500000c0140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=1 word=5 pcap_sec=1700000000 pcap_frac=0 tsu80=00006553f10000000000 ts_sec=1700000000 ts_ns=0 tdata=025000000000e803 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=1 word=6 pcap_sec=1700000000 pcap_frac=0 tsu80=00006553f10000000000 ts_sec=1700000000 ts_ns=0 tdata=000000003b56ffff tkeep=3f tvalid=1 tlast=1 tuser=1
+Pacote 1 concluido: bytes=54/54 words=7/7 timestamp=00006553f10000000000/00006553f10000000000 erro=0
+pcap=2 word=0 pcap_sec=1700000000 pcap_frac=100000 tsu80=00006553f10005f5e100 ts_sec=1700000000 ts_ns=100000000 tdata=0002011000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=2 word=1 pcap_sec=1700000000 pcap_frac=100000 tsu80=00006553f10005f5e100 ts_sec=1700000000 ts_ns=100000000 tdata=0045000801200000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=2 word=2 pcap_sec=1700000000 pcap_frac=100000 tsu80=00006553f10005f5e100 ts_sec=1700000000 ts_ns=100000000 tdata=0640004002002800 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=2 word=3 pcap_sec=1700000000 pcap_frac=100000 tsu80=00006553f10005f5e100 ts_sec=1700000000 ts_ns=100000000 tdata=a8c0140aa8c05fa5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=2 word=4 pcap_sec=1700000000 pcap_frac=100000 tsu80=00006553f10005f5e100 ts_sec=1700000000 ts_ns=100000000 tdata=000000c050000a0a tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=2 word=5 pcap_sec=1700000000 pcap_frac=100000 tsu80=00006553f10005f5e100 ts_sec=1700000000 ts_ns=100000000 tdata=1250e9030000d007 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=2 word=6 pcap_sec=1700000000 pcap_frac=100000 tsu80=00006553f10005f5e100 ts_sec=1700000000 ts_ns=100000000 tdata=000000005a4effff tkeep=3f tvalid=1 tlast=1 tuser=1
+Pacote 2 concluido: bytes=54/54 words=7/7 timestamp=00006553f10005f5e100/00006553f10005f5e100 erro=0
+pcap=3 word=0 pcap_sec=1700000000 pcap_frac=200000 tsu80=00006553f1000bebc200 ts_sec=1700000000 ts_ns=200000000 tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=3 word=1 pcap_sec=1700000000 pcap_frac=200000 tsu80=00006553f1000bebc200 ts_sec=1700000000 ts_ns=200000000 tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=3 word=2 pcap_sec=1700000000 pcap_frac=200000 tsu80=00006553f1000bebc200 ts_sec=1700000000 ts_ns=200000000 tdata=0640004003002800 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=3 word=3 pcap_sec=1700000000 pcap_frac=200000 tsu80=00006553f1000bebc200 ts_sec=1700000000 ts_ns=200000000 tdata=a8c00a0aa8c05ea5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=3 word=4 pcap_sec=1700000000 pcap_frac=200000 tsu80=00006553f1000bebc200 ts_sec=1700000000 ts_ns=200000000 tdata=0000500000c0140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=3 word=5 pcap_sec=1700000000 pcap_frac=200000 tsu80=00006553f1000bebc200 ts_sec=1700000000 ts_ns=200000000 tdata=1050d1070000e903 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=3 word=6 pcap_sec=1700000000 pcap_frac=200000 tsu80=00006553f1000bebc200 ts_sec=1700000000 ts_ns=200000000 tdata=000000005b4effff tkeep=3f tvalid=1 tlast=1 tuser=1
+Pacote 3 concluido: bytes=54/54 words=7/7 timestamp=00006553f1000bebc200/00006553f1000bebc200 erro=0
+pcap=4 word=0 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=1 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=2 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=0640004004006c00 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=3 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=a8c00a0aa8c019a5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=4 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=0000500000c0140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=5 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=1850d1070000e903 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=6 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=45470000787fffff tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=7 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=7865646e692f2054 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=8 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=5448206c6d74682e tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=9 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=0a0d312e312f5054 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=10 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=7865203a74736f48 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=11 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=6f6c2e6f6c706d65 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=12 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=6e6f430a0d6c6163 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=13 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=3a6e6f697463656e tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=14 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=0a0d65736f6c6320 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=4 word=15 pcap_sec=1700000000 pcap_frac=300000 tsu80=00006553f10011e1a300 ts_sec=1700000000 ts_ns=300000000 tdata=0000000000000a0d tkeep=03 tvalid=1 tlast=1 tuser=1
+Pacote 4 concluido: bytes=122/122 words=16/16 timestamp=00006553f10011e1a300/00006553f10011e1a300 erro=0
+pcap=5 word=0 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=0002011000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=1 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=0045000801200000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=2 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=0640004005006f00 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=3 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=a8c0140aa8c015a5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=4 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=000000c050000a0a tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=5 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=18502d040000d107 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=6 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=544800002207ffff tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=7 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=3220312e312f5054 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=8 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=430a0d4b4f203030 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=9 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=4c2d746e65746e6f tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=10 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=31203a6874676e65 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=11 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=656e6e6f430a0d33 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=12 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=63203a6e6f697463 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=13 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=0a0d0a0d65736f6c tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=14 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=57202c6f6c6c6548 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=5 word=15 pcap_sec=1700000000 pcap_frac=400000 tsu80=00006553f10017d78400 ts_sec=1700000000 ts_ns=400000000 tdata=00000021646c726f tkeep=1f tvalid=1 tlast=1 tuser=1
+Pacote 5 concluido: bytes=125/125 words=16/16 timestamp=00006553f10017d78400/00006553f10017d78400 erro=0
+pcap=6 word=0 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=0002012000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=6 word=1 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=0045000801100000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=6 word=2 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=1140004006003100 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=6 word=3 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=a8c00a0aa8c047a5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=6 word=4 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=1d00881308cf140a tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=6 word=5 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=6761736e656d02ae tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=6 word=6 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=6420504455206d65 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=6 word=7 pcap_sec=1700000000 pcap_frac=500000 tsu80=00006553f1001dcd6500 ts_sec=1700000000 ts_ns=500000000 tdata=0065747365742065 tkeep=7f tvalid=1 tlast=1 tuser=1
+Pacote 6 concluido: bytes=63/63 words=8/8 timestamp=00006553f1001dcd6500/00006553f1001dcd6500 erro=0
+pcap=7 word=0 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=0002011000000002 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=7 word=1 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=0045000801200000 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=7 word=2 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=1140004007003100 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=7 word=3 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=a8c0140aa8c046a5 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=7 word=4 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=1d0008cf88130a0a tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=7 word=5 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=736f707365720587 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=7 word=6 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=6420504455206174 tkeep=ff tvalid=1 tlast=0 tuser=0
+pcap=7 word=7 pcap_sec=1700000000 pcap_frac=600000 tsu80=00006553f10023c34600 ts_sec=1700000000 ts_ns=600000000 tdata=0065747365742065 tkeep=7f tvalid=1 tlast=1 tuser=1
+Pacote 7 concluido: bytes=63/63 words=8/8 timestamp=00006553f10023c34600/00006553f10023c34600 erro=0
+===============================================
+TESTE PASSOU: PCAP direto, clock, reset, TKEEP, TLAST e timestamp 80 bits.
+Pacotes processados: 7
+Palavras processadas: 69
+===============================================

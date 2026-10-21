@@ -3,11 +3,11 @@
 
 module packet_parser #(
     // Na fase atual de simulacao, timestamp_in e expresso em nanossegundos.
-    // 64 bits comportam com folga timestamps de PCAP em nanossegundos.
+    // O timestamp utiliza 80 bits, conforme o contrato atual da arquitetura.
     parameter int TS_WIDTH = 80
 ) (
     input  wire                  clk,
-    input  wire                  reset_n,
+    input  wire                  reset,
 
     // Interface MAC RX
     input  wire [63:0]           TDATA,
@@ -16,7 +16,8 @@ module packet_parser #(
     input  wire                  TLAST,
     input  wire                  TUSER,
 
-    // Simulacao: timestamp proveniente do PCAP, em nanossegundos.
+    // Simulacao: timestamp proveniente do PCAP, em nanossegundos,
+    // originado do relogio do sistema no script Python.
     // FPGA: futuramente esta entrada podera ser alimentada pelo TSU.
     input  wire [TS_WIDTH-1:0]   timestamp_in,
 
@@ -28,9 +29,10 @@ module packet_parser #(
     output logic [7:0]           protocol,
     output logic [15:0]          packet_length,
     output logic [TS_WIDTH-1:0]  timestamp,
-    output logic                 metadata_valid
+    output logic                 valid
 );
 
+    // Padrao de reset do projeto: sincrono, ativo em nivel alto.
     // Convencao do projeto:
     // primeiro byte da rede em TDATA[63:56].
     // TKEEP[7] -> TDATA[63:56], ..., TKEEP[0] -> TDATA[7:0].
@@ -75,8 +77,8 @@ module packet_parser #(
         end
     endfunction
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk) begin
+        if (reset) begin
             state               <= IDLE;
             src_ip              <= '0;
             dst_ip              <= '0;
@@ -85,7 +87,7 @@ module packet_parser #(
             protocol            <= '0;
             packet_length       <= '0;
             timestamp           <= '0;
-            metadata_valid      <= 1'b0;
+            valid      <= 1'b0;
             ethertype           <= '0;
             ip_version          <= '0;
             ihl                 <= '0;
@@ -96,11 +98,11 @@ module packet_parser #(
             frame_valid_latched <= 1'b0;
         end else begin
             // Pulso de um ciclo apenas quando os metadados sao liberados.
-            metadata_valid <= 1'b0;
+            valid <= 1'b0;
 
             case (state)
                 OUTPUT_STATE: begin
-                    metadata_valid <= 1'b1;
+                    valid <= 1'b1;
                     state          <= IDLE;
                     byte_offset    <= '0;
                 end
