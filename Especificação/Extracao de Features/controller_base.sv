@@ -1,5 +1,11 @@
 `timescale 1ns/1ps
 
+// Controller da Flow Table.
+// Reset sincrono, ativo em nivel alto.
+// Protocolo de entrada (valid, sem ready), conforme o padrao do emissor/receptor:
+//   - captura os dados somente em IDLE, quando hash_valid = 1 (start)
+//   - uma nova captura so e aceita depois que hash_valid voltar a 0
+//     (estado WAIT_VALID_LOW)
 module controller (
     input  logic         clk,
     input  logic         rst,
@@ -38,7 +44,7 @@ module controller (
     localparam logic [1:0] RESULT_COLLISION = 2'b11;
 
     typedef enum logic [3:0] {
-        IDLE,
+        IDLE,             // Aguarda hash_valid e captura os dados
         LOOKUP_REQ,
         LOOKUP_WAIT,
         CLASSIFY,
@@ -46,16 +52,15 @@ module controller (
         HIT_READ_WAIT,
         PREPARE_WRITE,
         WRITE_REQ,
-        WRITE_WAIT
+        WRITE_WAIT,
+        WAIT_VALID_LOW    // Aguarda hash_valid voltar a zero
     } state_t;
 
     state_t state;
 
-    logic [15:0]  hash_index_reg;
     logic [103:0] flow_key_reg;
     logic [15:0]  packet_length_reg;
     logic [79:0]  timestamp_reg;
-    logic         start;
 
     logic [19:0]  base_addr;
     logic [3:0]   word_index;
@@ -69,40 +74,29 @@ module controller (
 
     wire is_miss = (lookup_result == RESULT_MISS);
 
+    // start: pulso de 1 ciclo. So existe em IDLE com hash_valid = 1,
+    // logo um hash_valid fora de IDLE nunca e capturado.
+    wire start = (state == IDLE) && hash_valid;
+
     // Esta etapa nao usa a finalizacao por pacote.
     assign fin_valid = 1'b0;
 
     // ------------------------------------------------------------
-    // Recepcao: captura os dados quando hash_valid = 1 e gera start
+    // Recepcao: captura os dados quando start = 1
     // ------------------------------------------------------------
-    always_ff @(posedge clk or posedge rst) begin
+    always_ff @(posedge clk) begin
         if (rst) begin
-            hash_index_reg    <= '0;
+            base_addr         <= '0;
             flow_key_reg      <= '0;
             packet_length_reg <= '0;
             timestamp_reg     <= '0;
-            start             <= 1'b0;
-        end else begin
-            if (hash_valid) begin
-                hash_index_reg    <= hash_index;
-                flow_key_reg      <= flow_key;
-                packet_length_reg <= packet_length;
-                timestamp_reg     <= timestamp;
-                start             <= 1'b1;
-            end else if (start) begin
-                start <= 1'b0;
-            end
+        end else if (start) begin
+            base_addr         <= {hash_index, 4'b0000};   // hash_index x 16
+            flow_key_reg      <= flow_key;
+            packet_length_reg <= packet_length;
+            timestamp_reg     <= timestamp;
         end
     end
-
-    // Verificacao so de simulacao: sem ready, o produtor nao pode
-    // enviar hash_valid enquanto o Controller esta ocupado.
-    // synthesis translate_off
-    always @(posedge clk) begin
-        if (!rst && hash_valid && (state != IDLE || start))
-            $error("[controller] hash_valid com Controller ocupado: pacote sobrescrito");
-    end
-    // synthesis translate_on
 
     // ------------------------------------------------------------
     // Interface combinacional com a Flow Table
@@ -151,10 +145,9 @@ module controller (
     // ------------------------------------------------------------
     // FSM
     // ------------------------------------------------------------
-    always_ff @(posedge clk or posedge rst) begin
+    always_ff @(posedge clk) begin
         if (rst) begin
             state            <= IDLE;
-            base_addr        <= '0;
             word_index       <= '0;
             write_word_index <= '0;
             stored_valid     <= 1'b0;
@@ -171,7 +164,6 @@ module controller (
 
                 IDLE: begin
                     if (start) begin
-                        base_addr       <= {hash_index_reg, 4'b0000};
                         word_index      <= 4'd0;
                         flow_entry      <= '0;
                         stored_valid    <= 1'b0;
@@ -250,7 +242,7 @@ module controller (
                         // COLLISION: nenhuma escrita, entrada preservada
                         lookup_result <= RESULT_COLLISION;
                         lookup_done   <= 1'b1;
-                        state         <= IDLE;
+                        state         <= WAIT_VALID_LOW;
                     end
                 end
 
@@ -293,7 +285,7 @@ module controller (
                     if (wr_done) begin
                         if (write_word_index == 4'd12) begin
                             lookup_done <= 1'b1;
-                            state       <= IDLE;
+                            state       <= WAIT_VALID_LOW;
                         end else begin
                             state <= WRITE_REQ;
                             if (is_miss)
@@ -304,6 +296,12 @@ module controller (
                                 write_word_index <= write_word_index + 1'b1;
                         end
                     end
+                end
+
+                // Impede nova captura enquanto hash_valid permanecer alto
+                WAIT_VALID_LOW: begin
+                    if (!hash_valid)
+                        state <= IDLE;
                 end
 
                 default: state <= IDLE;
