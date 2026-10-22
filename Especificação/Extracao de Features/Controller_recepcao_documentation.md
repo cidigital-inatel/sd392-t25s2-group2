@@ -6,7 +6,7 @@
 
 Nesta etapa, o Controller:
 
-- Recebe os metadados do pacote (`hash_valid` + dados), captura-os e gera o sinal interno `start`.
+- Recebe os metadados do pacote pelo protocolo `valid` (sem `ready`), captura os dados e sinaliza `start` para iniciar a FSM.
 - Consulta a Flow Table lendo `valid` e `flow_key` (palavras W0–W4).
 - Classifica o resultado em **MISS**, **HIT** ou **COLLISION**.
 - Executa a operação correspondente: cria o fluxo (MISS), atualiza os contadores (HIT) ou preserva a entrada (COLLISION).
@@ -18,7 +18,7 @@ A varredura de finalização e a interface com o Flow Finalizer não fazem parte
 | Sinal | Direção | Largura | Descrição |
 |---|---|---:|---|
 | `clk` | Entrada | 1 bit | Clock do sistema. |
-| `rst` | Entrada | 1 bit | Reset assíncrono, ativo em nível alto. |
+| `rst` | Entrada | 1 bit | Reset síncrono, ativo em nível alto. |
 | `hash_index` | Entrada | 16 bits | Índice da entrada na Flow Table. |
 | `flow_key` | Entrada | 104 bits | Chave do fluxo. |
 | `packet_length` | Entrada | 16 bits | Tamanho do pacote em bytes. |
@@ -35,38 +35,43 @@ A varredura de finalização e a interface com o Flow Finalizer não fazem parte
 
 ### 1.2. Recepção do barramento
 
-O protocolo entre módulos usa **somente `valid`, sem `ready`**. Quando `hash_valid = 1`, o Controller captura os dados e pulsa `start` por 1 ciclo. Esse bloco é separado da FSM e segue o padrão acordado:
+O protocolo entre módulos usa **somente `valid`, sem `ready`**, seguindo o padrão do emissor/receptor (captura por nível):
+
+- A captura só acontece no estado `IDLE`, quando `hash_valid = 1`.
+- Depois da operação, o Controller aguarda `hash_valid` voltar a 0 (estado `WAIT_VALID_LOW`) antes de aceitar uma nova leitura do barramento.
+
+O sinal `start` é um pulso de 1 ciclo, gerado apenas em `IDLE`:
 
 ```systemverilog
-always_ff @(posedge clk or posedge rst) begin
+wire start = (state == IDLE) && hash_valid;
+
+always_ff @(posedge clk) begin
     if (rst) begin
-        hash_index_reg    <= '0;
+        base_addr         <= '0;
         flow_key_reg      <= '0;
         packet_length_reg <= '0;
         timestamp_reg     <= '0;
-        start             <= 1'b0;
-    end else begin
-        if (hash_valid) begin
-            hash_index_reg    <= hash_index;
-            flow_key_reg      <= flow_key;
-            packet_length_reg <= packet_length;
-            timestamp_reg     <= timestamp;
-            start             <= 1'b1;
-        end else if (start) begin
-            start <= 1'b0;
-        end
+    end else if (start) begin
+        base_addr         <= {hash_index, 4'b0000};   // hash_index x 16
+        flow_key_reg      <= flow_key;
+        packet_length_reg <= packet_length;
+        timestamp_reg     <= timestamp;
     end
 end
 ```
 
-**Premissa de integração:** como não há `ready`, o Data Mover não deve enviar um novo `hash_valid` enquanto o Controller estiver ocupado. Em simulação, um `$error` é emitido se isso ocorrer.
+**Consequências do protocolo:**
+
+- Um `hash_valid` mantido em 1 por vários ciclos gera **uma única** operação.
+- Um `hash_valid` que chega com o Controller ocupado **não é capturado** (o pacote é ignorado).
+- Como não há `ready`, o Data Mover deve respeitar essa regra: só enviar um novo pacote com o Controller em `IDLE`.
 
 ### 1.3. Endereçamento
 
 Cada entrada tem 16 palavras de 32 bits. O endereço de 20 bits é formado por:
 
 ```systemverilog
-rd_addr = {hash_index_reg, word_index};   // base_addr = hash_index << 4
+rd_addr = {base_addr[19:4], word_index};   // base_addr = hash_index << 4
 ```
 
 Exemplo: `hash_index = 5` → entrada nos endereços 80 a 95.
@@ -75,13 +80,16 @@ Exemplo: `hash_index = 5` → entrada nos endereços 80 a 95.
 
 | Estado | Função | Próximo estado |
 |---|---|---|
-| `IDLE` | Aguarda `start`; calcula `base_addr` e limpa `flow_entry`. | `LOOKUP_REQ` |
+| `IDLE` | Aguarda `start` (captura os dados); limpa `flow_entry`. | `LOOKUP_REQ` |
 | `LOOKUP_REQ` | Ativa `rd_en` com o endereço da palavra. | `LOOKUP_WAIT` |
 | `LOOKUP_WAIT` | Aguarda `rd_valid`; guarda `valid` e `flow_key`. | `LOOKUP_REQ` (até W4) ou `CLASSIFY` |
-| `CLASSIFY` | Decide MISS, HIT ou COLLISION. | `PREPARE_WRITE`, `HIT_READ_REQ` ou `IDLE` |
+| `CLASSIFY` | Decide MISS, HIT ou COLLISION. | `PREPARE_WRITE`, `HIT_READ_REQ` ou `WAIT_VALID_LOW` |
 | `HIT_READ_REQ` / `HIT_READ_WAIT` | Lê W5 (`packet_count`) e W6 (`byte_count`). | `PREPARE_WRITE` |
 | `PREPARE_WRITE` | Calcula os novos valores e define a primeira palavra a escrever. | `WRITE_REQ` |
-| `WRITE_REQ` / `WRITE_WAIT` | Escreve uma palavra e aguarda `wr_done`. | `WRITE_REQ` ou `IDLE` (após W12) |
+| `WRITE_REQ` / `WRITE_WAIT` | Escreve uma palavra e aguarda `wr_done`. | `WRITE_REQ` ou `WAIT_VALID_LOW` (após W12) |
+| `WAIT_VALID_LOW` | Aguarda `hash_valid = 0`. | `IDLE` |
+
+O pulso de `lookup_done` é emitido ao entrar em `WAIT_VALID_LOW`.
 
 Correspondência com a especificação: FETCH = `LOOKUP_*`, CHECK = `CLASSIFY`, INSERT = escritas de MISS, UPDATE = leituras e escritas de HIT.
 
@@ -121,19 +129,19 @@ Classificação no estado `CLASSIFY`:
 
 ### Objetivo
 
-Verificar a recepção, o lookup e a classificação com o Controller conectado à **Flow Table real** (`flow_table.sv`).
+Verificar a recepção, o lookup e a classificação com o Controller conectado à **Flow Table real** (`flow_table.sv`). Este é um teste de **integração**.
 
 ### 2.1. Configuração
 
 - A Flow Table é instanciada com latência de 1 ciclo para leitura e escrita, conforme o contrato de interface.
 - A memória é inicializada em zero na declaração (todos os `valid` começam em 0).
-- Os casos que precisam de conteúdo prévio são pré-carregados pela porta de escrita da Flow Table, por meio de um mux no testbench.
+- Os casos que precisam de conteúdo prévio são pré-carregados pela porta de escrita da Flow Table, por meio de um mux no testbench (`tb_wr_*`).
 - Logo após `hash_valid`, as entradas são embaralhadas, para provar que o Controller capturou os dados no ciclo correto.
 - Clock de 100 MHz (período de 10 ns).
 
 ### 2.2. Verificações automáticas
 
-- `start` dura exatamente 1 ciclo.
+- `start` dura exatamente 1 ciclo, e cada operação gera exatamente 1 pulso de `start` e 1 de `lookup_done`.
 - Todo endereço de leitura e escrita pertence à entrada consultada (`addr[19:4] = hash_index`).
 - Nenhuma leitura retorna valor desconhecido (`X`), o que detectaria memória não inicializada.
 - Cada cenário confere `lookup_result`, o número de leituras, o número de escritas e o conteúdo final da memória.
@@ -151,28 +159,35 @@ Verificar a recepção, o lookup e a classificação com o Controller conectado 
 | 7 | W0 = `FFFFFFFE` (`valid` = 0) | MISS | 5 / 13 | PASSOU |
 | 8 | `hash_index` = 0 e 65535 | MISS | 5 / 13 | PASSOU |
 | 9 | MISS + HIT + HIT em sequência | `packet_count` = 3, bytes = 30 | 5/13, 7/5, 7/5 | PASSOU |
+| 10 | `hash_valid` mantido em 1 por 80 ciclos | Uma única operação (MISS), dados do primeiro ciclo | 5 / 13 | PASSOU |
+| 11 | Nova captura após `valid` voltar a 0 | HIT na mesma entrada | 7 / 5 | PASSOU |
+| 12 | Pacote enviado com o Controller ocupado | Pacote ignorado; entrada dele intacta | 5 / 13 (só o 1º pacote) | PASSOU |
 
-Resultado final: `TODOS OS TESTES PASSARAM!`, com `$finish` em 3980 ns e `errors = 0`.
+Resultado final: **`TODOS OS TESTES PASSARAM!`**, com `$finish` em 5700 ns e `errors = 0`.
 
 ---
 
 ## 3. Análise da forma de onda
 
-![Sinais de entrada e interface com a Flow Table](../../docs/images/Controller_recepcao1.png)
+![Entradas, leituras e escritas](../../docs/images/Controller_recepcao1.png)
 
-**Entrada e acessos à memória:** cada pulso de `hash_valid` é seguido por leituras (`rd_en`, `rd_valid`) e, nos casos de MISS e HIT, por escritas (`wr_en`, `wr_done`). Os endereços acompanham o `hash_index` de cada pacote.
+**Entradas e acessos à memória:** cada `hash_valid` é seguido por leituras (`rd_en`, `rd_valid`) e, nos casos de MISS e HIT, por escritas (`wr_en`, `wr_done`). Perto de 4 µs, `hash_valid` permanece em 1 por um intervalo longo enquanto `hash_index`, `flow_key`, `packet_length` e `timestamp` mudam. O Controller não reage a essas mudanças e executa uma única operação com os dados capturados no primeiro ciclo (cenário 10).
 
 ![lookup_result, lookup_done e contadores](../../docs/images/Controller_recepcao2.png)
 
-**Classificação:** `lookup_result` assume 1 (MISS), 2 (HIT) e 3 (COLLISION), com um pulso de `lookup_done` ao final de cada operação. `read_count` e `write_count` acompanham as operações e `errors` permanece em zero. `cur_idx` mostra a entrada acessada em cada cenário.
+**Classificação e contadores:** `lookup_result` assume 1 (MISS), 2 (HIT) e 3 (COLLISION), com um pulso de `lookup_done` ao final de cada operação. `read_count` e `write_count` acompanham as operações, `start_count` e `done_count` ficam em 1 ao fim de cada cenário, e `errors` permanece em zero. `cur_idx` mostra a entrada acessada em cada cenário.
 
-![Sinais auxiliares do testbench](../../docs/images/Controller_recepcao3.png)
+![Monitores e pré-carga da memória](../../docs/images/Controller_recepcao3.png)
 
-**Apoio do testbench:** pré-carga da memória pela porta `tb_wr_*`, pulso de `start` de 1 ciclo (`start_q`) e as constantes dos cenários (`KEY_A`, `KEY_B`, `TS1`, `TS2`).
+**Monitores e pré-carga:** `start_q` mostra os pulsos de 1 ciclo de `start`; `tb_wr_en` e `tb_wr_addr` mostram a pré-carga da memória feita pelo testbench antes dos cenários 6 e 7.
 
-![Console da simulação](../../docs/images/Controller_recepcao4.png)
+![Mux de escrita e constantes do testbench](../../docs/images/Controller_recepcao4.png)
 
-**Console:** todos os cenários com `PASSOU` e a mensagem final de aprovação.
+**Mux de escrita e constantes:** `ft_wr_en`, `ft_wr_addr` e `ft_wr_data` são as escritas que chegam à Flow Table (Controller e pré-carga do testbench). Também aparecem as constantes dos cenários (`KEY_A`, `KEY_B`, `TS1`, `TS2`).
+
+![Console da simulação](../../docs/images/Controller_recepcao5.png)
+
+**Console:** cenários 4 a 12 com `PASSOU` (os três primeiros saem da área visível), mensagem final `TODOS OS TESTES PASSARAM!` e `$finish` em 5700 ns.
 
 ---
 
@@ -180,25 +195,29 @@ Resultado final: `TODOS OS TESTES PASSARAM!`, com `$finish` em 3980 ns e `errors
 
 | Requisito | Evidência | Status |
 |---|---|---|
-| Receber metadados válidos | `hash_valid` provoca a captura dos dados | Aprovado |
-| Gerar `start` | Pulso de 1 ciclo após `hash_valid` | Aprovado |
+| Receber metadados válidos | `hash_valid` em `IDLE` provoca a captura dos dados | Aprovado |
+| Gerar `start` | Pulso de 1 ciclo; 1 por operação | Aprovado |
+| Aceitar nova leitura só após `valid` em 0 | Cenários 10 e 11 | Aprovado |
+| Ignorar `hash_valid` com o Controller ocupado | Cenário 12 | Aprovado |
 | Lookup conectado à Flow Table | Leitura de W0–W4 com `rd_en` / `rd_valid` | Aprovado |
 | Comparar 104 bits da chave | Cenários 4, 5 e 6 | Aprovado |
 | Usar só o bit 0 de `valid` | Cenários 6 e 7 | Aprovado |
-| Classificar MISS | Cenários 1, 7, 8 e 9 | Aprovado |
-| Classificar HIT | Cenários 2, 6 e 9 | Aprovado |
+| Classificar MISS | Cenários 1, 7, 8, 9 e 10 | Aprovado |
+| Classificar HIT | Cenários 2, 6, 9 e 11 | Aprovado |
 | Classificar COLLISION | Cenários 3, 4 e 5 (nenhuma escrita) | Aprovado |
 | Endereços dentro da entrada | Monitor de endereços, incluindo `hash_index` 0 e 65535 | Aprovado |
 | Operações consecutivas | Cenário 9 | Aprovado |
 
 ---
 
-## 5. Limitações e próximos passos
+## 5. Alterações de contrato a alinhar
 
-- **Sem `ready`:** o Controller não sinaliza disponibilidade. A garantia de que não chega um novo `hash_valid` enquanto ele está ocupado é do Data Mover e precisa ser mantida na integração.
-- **Finalização:** a varredura e o envio ao Flow Finalizer ainda não foram implementados.
-- **`flow_entry` com 416 bits:** necessário para carregar W0–W12, mas a figura da arquitetura mostra 384 bits. Alinhar com o Flow Finalizer.
+- **`flow_entry`:** o Controller monta W0–W12 (13 palavras × 32 bits = **416 bits**). A figura da arquitetura mostra **384 bits** (12 palavras), o que deixa o W12 (`last_timestamp[79:64]`) de fora. Definir com o Flow Finalizer entre ampliar para 416 bits ou usar um formato compactado.
+- **`hash_valid` com o Controller ocupado:** pelo protocolo sem `ready`, o pacote é ignorado. Confirmar com o Data Mover que o espaçamento entre pacotes respeita essa regra.
+
+## 6. Limitações e próximos passos
+
+- **Teste unitário:** o testbench atual é de integração (Controller + Flow Table real). Falta um teste unitário com modelo simples de memória, para separar erros internos do Controller de erros de integração.
+- **Finalização:** a varredura e o envio ao Flow Finalizer ainda não foram implementados (`fin_valid = 0`, `fin_done` sem uso).
 - **`flow_entry` no HIT:** as palavras W7–W9 (`first_timestamp`) não são lidas no HIT, então não estão no `flow_entry` nesse caso. Se o Finalizer precisar desse campo, será necessário lê-lo ou ler a entrada na própria varredura.
-- **Largura do endereço:** o Controller usa 20 bits, conforme o contrato da Flow Table. A figura mostra 21 bits e precisa ser atualizada.
-- **Nome do reset:** o Controller usa `rst` (assíncrono, como no padrão acordado); a figura usa `reset`. Padronizar.
 - **Latência da memória:** os testes usaram `rd_valid` com 1 ciclo. O Controller espera `rd_valid`, então deve tolerar latências maiores, mas isso ainda não foi simulado.
