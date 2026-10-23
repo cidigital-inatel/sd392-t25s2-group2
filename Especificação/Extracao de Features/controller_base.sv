@@ -6,6 +6,13 @@
 //   - captura os dados somente em IDLE, quando hash_valid = 1 (start)
 //   - uma nova captura so e aceita depois que hash_valid voltar a 0
 //     (estado WAIT_VALID_LOW)
+//   - um pacote que chega com o Controller ocupado nao e capturado (sem FIFO)
+//
+// flow_entry (384 bits) = W1..W12 do registro, sem o W0 (valid):
+//   W1  [31:0]    W2  [63:32]   W3  [95:64]   W4  [127:96]  (flow_key)
+//   W5  [159:128] (packet_count)  W6 [191:160] (byte_count)
+//   W7  [223:192] W8  [255:224] W9  [287:256] (first_timestamp)
+//   W10 [319:288] W11 [351:320] W12 [383:352] (last_timestamp)
 module controller (
     input  logic         clk,
     input  logic         rst,
@@ -29,13 +36,16 @@ module controller (
     input  logic         wr_done,
 
     // Flow Finalizer (reservado para a proxima etapa)
-    output logic [415:0] flow_entry,
+    output logic [383:0] flow_entry,
     output logic         fin_valid,
     input  logic         fin_done,
 
     // Resultado do lookup
     output logic [1:0]   lookup_result,
-    output logic         lookup_done
+    output logic         lookup_done,
+
+    // Numero de colisoes detectadas (satura em 32'hFFFFFFFF)
+    output logic [31:0]  collision_count
 );
 
     localparam logic [1:0] RESULT_NONE      = 2'b00;
@@ -157,6 +167,7 @@ module controller (
             flow_entry       <= '0;
             lookup_result    <= RESULT_NONE;
             lookup_done      <= 1'b0;
+            collision_count  <= '0;
         end else begin
             lookup_done <= 1'b0;
 
@@ -180,24 +191,23 @@ module controller (
                     if (rd_valid) begin
                         case (word_index)
                             4'd0: begin
-                                stored_valid     <= rd_data[0];   // so o bit 0
-                                flow_entry[31:0] <= rd_data;
+                                stored_valid <= rd_data[0];   // so o bit 0; W0 nao vai ao flow_entry
                             end
                             4'd1: begin
                                 stored_flow_key[31:0] <= rd_data;
-                                flow_entry[63:32]     <= rd_data;
+                                flow_entry[31:0]      <= rd_data;
                             end
                             4'd2: begin
                                 stored_flow_key[63:32] <= rd_data;
-                                flow_entry[95:64]      <= rd_data;
+                                flow_entry[63:32]      <= rd_data;
                             end
                             4'd3: begin
                                 stored_flow_key[95:64] <= rd_data;
-                                flow_entry[127:96]     <= rd_data;
+                                flow_entry[95:64]      <= rd_data;
                             end
                             4'd4: begin
                                 stored_flow_key[103:96] <= rd_data[7:0]; // mascara W4
-                                flow_entry[159:128]     <= rd_data;
+                                flow_entry[127:96]      <= rd_data;
                             end
                             default: ;
                         endcase
@@ -214,21 +224,21 @@ module controller (
                 // Classificacao: MISS / HIT / COLLISION
                 CLASSIFY: begin
                     if (!stored_valid) begin
+                        // MISS: monta o novo registro (W1..W12)
                         lookup_result <= RESULT_MISS;
 
-                        flow_entry[31:0]    <= 32'h00000001;
-                        flow_entry[63:32]   <= flow_key_reg[31:0];
-                        flow_entry[95:64]   <= flow_key_reg[63:32];
-                        flow_entry[127:96]  <= flow_key_reg[95:64];
-                        flow_entry[159:128] <= {24'b0, flow_key_reg[103:96]};
-                        flow_entry[191:160] <= 32'd1;
-                        flow_entry[223:192] <= {16'b0, packet_length_reg};
-                        flow_entry[255:224] <= timestamp_reg[31:0];
-                        flow_entry[287:256] <= timestamp_reg[63:32];
-                        flow_entry[319:288] <= {16'b0, timestamp_reg[79:64]};
-                        flow_entry[351:320] <= timestamp_reg[31:0];
-                        flow_entry[383:352] <= timestamp_reg[63:32];
-                        flow_entry[415:384] <= {16'b0, timestamp_reg[79:64]};
+                        flow_entry[31:0]    <= flow_key_reg[31:0];                  // W1
+                        flow_entry[63:32]   <= flow_key_reg[63:32];                 // W2
+                        flow_entry[95:64]   <= flow_key_reg[95:64];                 // W3
+                        flow_entry[127:96]  <= {24'b0, flow_key_reg[103:96]};       // W4
+                        flow_entry[159:128] <= 32'd1;                               // W5 packet_count
+                        flow_entry[191:160] <= {16'b0, packet_length_reg};          // W6 byte_count
+                        flow_entry[223:192] <= timestamp_reg[31:0];                 // W7
+                        flow_entry[255:224] <= timestamp_reg[63:32];                // W8
+                        flow_entry[287:256] <= {16'b0, timestamp_reg[79:64]};       // W9
+                        flow_entry[319:288] <= timestamp_reg[31:0];                 // W10
+                        flow_entry[351:320] <= timestamp_reg[63:32];                // W11
+                        flow_entry[383:352] <= {16'b0, timestamp_reg[79:64]};       // W12
 
                         write_word_index <= 4'd0;
                         state            <= PREPARE_WRITE;
@@ -239,26 +249,28 @@ module controller (
                         state         <= HIT_READ_REQ;
 
                     end else begin
-                        // COLLISION: nenhuma escrita, entrada preservada
+                        // COLLISION: nenhuma escrita, entrada preservada, conta a falha
                         lookup_result <= RESULT_COLLISION;
+                        if (collision_count != 32'hFFFFFFFF)
+                            collision_count <= collision_count + 1'b1;
                         lookup_done   <= 1'b1;
                         state         <= WAIT_VALID_LOW;
                     end
                 end
 
-                // HIT: le W5 e W6
+                // HIT: le W5 e W6 (W7..W9 nao sao lidos)
                 HIT_READ_REQ: state <= HIT_READ_WAIT;
 
                 HIT_READ_WAIT: begin
                     if (rd_valid) begin
                         if (word_index == 4'd5) begin
                             packet_count_reg    <= rd_data;
-                            flow_entry[191:160] <= rd_data;
+                            flow_entry[159:128] <= rd_data;
                             word_index          <= 4'd6;
                             state               <= HIT_READ_REQ;
                         end else begin
                             byte_count_reg      <= rd_data;
-                            flow_entry[223:192] <= rd_data;
+                            flow_entry[191:160] <= rd_data;
                             state               <= PREPARE_WRITE;
                         end
                     end
@@ -268,11 +280,11 @@ module controller (
                     if (is_miss) begin
                         write_word_index <= 4'd0;
                     end else begin
-                        flow_entry[191:160] <= packet_count_reg + 32'd1;
-                        flow_entry[223:192] <= byte_count_reg + {16'b0, packet_length_reg};
-                        flow_entry[351:320] <= timestamp_reg[31:0];
-                        flow_entry[383:352] <= timestamp_reg[63:32];
-                        flow_entry[415:384] <= {16'b0, timestamp_reg[79:64]};
+                        flow_entry[159:128] <= packet_count_reg + 32'd1;
+                        flow_entry[191:160] <= byte_count_reg + {16'b0, packet_length_reg};
+                        flow_entry[319:288] <= timestamp_reg[31:0];                 // W10
+                        flow_entry[351:320] <= timestamp_reg[63:32];                // W11
+                        flow_entry[383:352] <= {16'b0, timestamp_reg[79:64]};       // W12
                         write_word_index    <= 4'd5;
                     end
                     state <= WRITE_REQ;

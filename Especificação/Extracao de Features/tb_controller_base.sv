@@ -22,7 +22,8 @@ module tb_controller;
     logic [19:0]  rd_addr, wr_addr;
     logic [31:0]  rd_data, wr_data;
 
-    logic [415:0] flow_entry;
+    logic [383:0] flow_entry;
+    logic [31:0]  collision_count;
     logic         fin_valid;
     logic         fin_done;
     logic [1:0]   lookup_result;
@@ -33,6 +34,7 @@ module tb_controller;
     integer start_count = 0;
     integer done_count  = 0;
     integer errors      = 0;
+    integer coll_expected = 0;   // colisoes esperadas ate o momento
 
     logic [15:0] cur_idx = '0;
     logic        start_q = 1'b0;
@@ -52,7 +54,8 @@ module tb_controller;
         .wr_data(wr_data), .wr_done(wr_done),
         .flow_entry(flow_entry),
         .fin_valid(fin_valid), .fin_done(fin_done),
-        .lookup_result(lookup_result), .lookup_done(lookup_done)
+        .lookup_result(lookup_result), .lookup_done(lookup_done),
+        .collision_count(collision_count)
     );
 
     // Porta de escrita do testbench (pre-carga da memoria).
@@ -253,6 +256,15 @@ module tb_controller;
             end
             if (done_count != 1) begin
                 $error("%s: pulsos de lookup_done=%0d esperado=1", name, done_count);
+                errors = errors + 1;
+            end
+
+            // Contador de colisoes: soma 1 em cada COLLISION e nao muda nos demais
+            if (exp_res == RESULT_COLLISION)
+                coll_expected = coll_expected + 1;
+            if (collision_count !== coll_expected) begin
+                $error("%s: collision_count=%0d esperado=%0d", name,
+                       collision_count, coll_expected);
                 errors = errors + 1;
             end
         end
