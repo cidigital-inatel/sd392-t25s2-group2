@@ -1,4 +1,6 @@
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/controller_base.sv" into library xil_defaultlib
 INFO: [VRFC 10-311] analyzing module controller
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_unit.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module unit_env
+INFO: [VRFC 10-311] analyzing module scan_env
 INFO: [VRFC 10-311] analyzing module tb_controller_unit

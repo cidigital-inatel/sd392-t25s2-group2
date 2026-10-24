@@ -24,6 +24,7 @@ module tb_controller;
 
     logic [383:0] flow_entry;
     logic [31:0]  collision_count;
+    logic         scan_done;
     logic         fin_valid;
     logic         fin_done;
     logic [1:0]   lookup_result;
@@ -55,7 +56,8 @@ module tb_controller;
         .flow_entry(flow_entry),
         .fin_valid(fin_valid), .fin_done(fin_done),
         .lookup_result(lookup_result), .lookup_done(lookup_done),
-        .collision_count(collision_count)
+        .collision_count(collision_count),
+        .fin_start(1'b0), .scan_done(scan_done)
     );
 
     // Porta de escrita do testbench (pre-carga da memoria).
