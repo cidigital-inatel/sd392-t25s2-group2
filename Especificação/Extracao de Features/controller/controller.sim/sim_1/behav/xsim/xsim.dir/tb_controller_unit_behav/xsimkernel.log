@@ -2,3 +2,6 @@ Running: xsim.dir/tb_controller_unit_behav/xsimk.exe -simmode gui -wdb tb_contro
 Design successfully loaded
 Design Loading Memory Usage: 18920 KB (Peak: 18920 KB)
 Design Loading CPU Usage: 77 ms
+Simulation completed
+Simulation Memory Usage: 29980 KB (Peak: 29980 KB)
+Simulation CPU Usage: 624 ms

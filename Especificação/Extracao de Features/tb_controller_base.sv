@@ -55,10 +55,14 @@ module tb_controller;
         .wr_data(wr_data), .wr_done(wr_done),
         .flow_entry(flow_entry),
         .fin_valid(fin_valid), .fin_done(fin_done),
-        .lookup_result(lookup_result), .lookup_done(lookup_done),
-        .collision_count(collision_count),
-        .fin_start(1'b0), .scan_done(scan_done)
+        .pcap_done(1'b0)
     );
+
+    // Sinais internos do Controller (fora da interface), lidos por referencia hierarquica
+    assign lookup_result   = dut.lookup_result;
+    assign lookup_done     = dut.lookup_done;
+    assign collision_count = dut.collision_count;
+    assign scan_done       = dut.scan_done;
 
     // Porta de escrita do testbench (pre-carga da memoria).
     // So e usada com o Controller em IDLE.

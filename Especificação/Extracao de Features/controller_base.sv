@@ -10,13 +10,13 @@
 //   - um pacote que chega com o Controller ocupado nao e capturado (sem FIFO)
 //
 // VARREDURA / FINALIZACAO  (PROVISORIO: depende das respostas da equipe)
-//   - gatilho: borda de subida de fin_start (pedido memorizado se o Controller
+//   - gatilho: borda de subida de pcap_done (pedido memorizado se o Controller
 //     estiver ocupado; a varredura comeca quando ele voltar a IDLE)
 //   - para cada entrada 0..SCAN_ENTRIES-1: le W0; se valid = 1, le W1..W12,
 //     monta flow_entry e mantem fin_valid = 1 ate o Finalizer responder fin_done
 //   - depois de fin_done, aguarda fin_done voltar a 0 antes de continuar
 //   - se INVALIDATE_AFTER_SEND = 1, escreve W0 = 0 (invalida a entrada enviada)
-//   - ao terminar, pulsa scan_done por 1 ciclo
+//   - ao terminar, pulsa scan_done (sinal interno) por 1 ciclo
 //   - pacotes que chegam durante a varredura sao ignorados (sem FIFO)
 //
 // flow_entry (384 bits) = W1..W12 do registro, sem o W0 (valid):
@@ -54,17 +54,17 @@ module controller #(
     output logic         fin_valid,
     input  logic         fin_done,
 
-    // Varredura (PROVISORIO: nao constam na figura da arquitetura)
-    input  logic         fin_start,
-    output logic         scan_done,
-
-    // Resultado do lookup
-    output logic [1:0]   lookup_result,
-    output logic         lookup_done,
-
-    // Numero de colisoes detectadas (satura em 32'hFFFFFFFF)
-    output logic [31:0]  collision_count
+    // Fim dos dados (pulso do testbench; a borda de subida tambem funciona
+    // se o sinal ficar em nivel alto)
+    input  logic         pcap_done
 );
+
+    // Sinais INTERNOS (nao fazem parte da interface da arquitetura).
+    // Os testbenches os leem por referencia hierarquica: dut.lookup_result, etc.
+    logic [1:0]                    lookup_result;    // 01 MISS, 10 HIT, 11 COLLISION
+    logic                          lookup_done;      // pulso de 1 ciclo ao fim de cada pacote
+    logic                          scan_done;        // pulso de 1 ciclo ao fim da varredura
+    (* keep = "true" *) logic [31:0] collision_count; // colisoes detectadas (satura em FFFFFFFF)
 
     localparam logic [1:0] RESULT_NONE      = 2'b00;
     localparam logic [1:0] RESULT_MISS      = 2'b01;
@@ -111,7 +111,7 @@ module controller #(
 
     logic [15:0]  scan_idx;
     logic         scan_req;
-    logic         fin_start_q;
+    logic         pcap_done_q;
 
     wire is_miss = (lookup_result == RESULT_MISS);
 
@@ -215,12 +215,12 @@ module controller #(
             collision_count  <= '0;
             scan_idx         <= '0;
             scan_req         <= 1'b0;
-            fin_start_q      <= 1'b0;
+            pcap_done_q      <= 1'b0;
             scan_done        <= 1'b0;
         end else begin
             lookup_done <= 1'b0;
             scan_done   <= 1'b0;
-            fin_start_q <= fin_start;
+            pcap_done_q <= pcap_done;
 
             case (state)
 
@@ -440,9 +440,9 @@ module controller #(
                 default: state <= IDLE;
             endcase
 
-            // Pedido de varredura: borda de subida de fin_start (memorizado).
+            // Pedido de varredura: borda de subida de pcap_done (memorizado).
             // Fica depois do case para prevalecer sobre o clear do IDLE.
-            if (fin_start && !fin_start_q)
+            if (pcap_done && !pcap_done_q)
                 scan_req <= 1'b1;
         end
     end
