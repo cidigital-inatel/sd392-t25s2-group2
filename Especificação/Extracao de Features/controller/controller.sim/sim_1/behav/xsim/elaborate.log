@@ -11,9 +11,10 @@ Completed simulation data flow analysis
 Time Resolution for simulation is 1ps
 Compiling module xil_defaultlib.controller
 Compiling module xil_defaultlib.unit_env_default
-Compiling module xil_defaultlib.unit_env(RD_LAT=2,QUIET=1'b1)
-Compiling module xil_defaultlib.unit_env(WR_LAT=3,QUIET=1'b1)
-Compiling module xil_defaultlib.unit_env(RD_LAT=3,WR_LAT=2,QUIET...
+Compiling module xil_defaultlib.unit_env(RD_LAT=2)
+Compiling module xil_defaultlib.unit_env(WR_LAT=3)
+Compiling module xil_defaultlib.unit_env(RD_LAT=3,WR_LAT=2)
+Compiling module xil_defaultlib.unit_env(N_RANDOM=50,FULL_RANGE=...
 Compiling module xil_defaultlib.controller(SCAN_ENTRIES=1024)
 Compiling module xil_defaultlib.scan_env
 Compiling module xil_defaultlib.scan_env(MODE=1,RD_LAT=2,WR_LAT=...
