@@ -498,7 +498,7 @@ O `collision_count` final bate com o modelo de referência em todas as configura
 
 ---
 
-## 8. Arquivos e como executar
+## 8. Arquivos 
 
 | Arquivo | Função |
 |---|---|
@@ -507,9 +507,3 @@ O `collision_count` final bate com o modelo de referência em todas as configura
 | `tb_controller.sv` | Testbench de integração (Controller + Flow Table real) |
 | `tb_controller_unit.sv` | Testbench unitário (modelos simples de memória e de Finalizer) |
 
-**No Vivado:**
-
-1. Em *Design Sources*, adicione `controller.sv` e `flow_table.sv`. Em *Simulation Sources*, adicione `tb_controller.sv` e `tb_controller_unit.sv`. Confirme que todos estão como **SystemVerilog**.
-2. **Integração:** defina `tb_controller` como *Top*, rode *Run Behavioral Simulation* e depois **Run All**. O esperado é `TODOS OS TESTES PASSARAM!`.
-3. **Unitário:** defina `tb_controller_unit` como *Top*, rode a simulação e **Run All**. Ele não usa o `flow_table.sv`. O esperado é `TODOS OS TESTES UNITARIOS PASSARAM!`.
-4. Ao trocar o *Top*, feche a simulação anterior (*Close Simulation*) antes de rodar.
