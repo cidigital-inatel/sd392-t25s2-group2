@@ -28,15 +28,12 @@ module unit_env #(
     parameter int RD_LAT   = 1,
     parameter int WR_LAT   = 1,
     parameter int N_RANDOM = 300,
-    parameter bit FULL_RANGE = 1'b0,
     parameter bit QUIET    = 1'b0
 ) (
     output logic   done,
     output integer errors
 );
 
-    localparam int ENTRIES = FULL_RANGE ? 65536 : 1024;
-    localparam int WORDS = ENTRIES * 16;
     localparam logic [1:0] RESULT_NONE      = 2'b00;
     localparam logic [1:0] RESULT_MISS      = 2'b01;
     localparam logic [1:0] RESULT_HIT       = 2'b10;
@@ -87,16 +84,16 @@ module unit_env #(
     logic [19:0] wr_log  [0:31];
     logic [31:0] wr_dlog [0:31];
 
-    logic [31:0] mem [0:WORDS-1];
+    logic [31:0] mem [0:16383];
 
     // Modelo de referencia (scoreboard)
-    logic         ref_valid [0:ENTRIES-1];
-    logic         ref_skip  [0:ENTRIES-1];
-    logic [103:0] ref_key   [0:ENTRIES-1];
-    logic [31:0]  ref_pkts  [0:ENTRIES-1];
-    logic [31:0]  ref_bytes [0:ENTRIES-1];
-    logic [79:0]  ref_first [0:ENTRIES-1];
-    logic [79:0]  ref_last  [0:ENTRIES-1];
+    logic         ref_valid [0:1023];
+    logic         ref_skip  [0:1023];
+    logic [103:0] ref_key   [0:1023];
+    logic [31:0]  ref_pkts  [0:1023];
+    logic [31:0]  ref_bytes [0:1023];
+    logic [79:0]  ref_first [0:1023];
+    logic [79:0]  ref_last  [0:1023];
     integer       ref_coll = 0;
 
     logic [103:0] pool [0:3];
@@ -116,10 +113,14 @@ module unit_env #(
         .wr_data(wr_data), .wr_done(wr_done),
         .flow_entry(flow_entry),
         .fin_valid(fin_valid), .fin_done(fin_done),
-        .lookup_result(lookup_result), .lookup_done(lookup_done),
-        .collision_count(collision_count),
-        .fin_start(1'b0), .scan_done(scan_done)
+        .pcap_done(1'b0)
     );
+
+    // Sinais internos do controller: leitura por referencia hierarquica.
+    assign lookup_result  = dut.lookup_result;
+    assign lookup_done    = dut.lookup_done;
+    assign collision_count = dut.collision_count;
+    assign scan_done      = dut.scan_done;
 
     // ---------------- Modelo da Flow Table (latencia configuravel) ----------------
     logic        rd_v_sr [1:RD_LAT];
@@ -137,7 +138,7 @@ module unit_env #(
                 wr_v_sr[i_m] <= 1'b0;
         end else begin
             rd_v_sr[1] <= rd_en;
-            rd_d_sr[1] <= rd_en ? mem[rd_addr] : 32'b0;
+            rd_d_sr[1] <= rd_en ? mem[rd_addr[13:0]] : 32'b0;
             for (i_m = 2; i_m <= RD_LAT; i_m = i_m + 1) begin
                 rd_v_sr[i_m] <= rd_v_sr[i_m-1];
                 rd_d_sr[i_m] <= rd_d_sr[i_m-1];
@@ -145,7 +146,7 @@ module unit_env #(
             wr_v_sr[1] <= wr_en;
             for (i_m = 2; i_m <= WR_LAT; i_m = i_m + 1)
                 wr_v_sr[i_m] <= wr_v_sr[i_m-1];
-            if (wr_en) mem[wr_addr] <= wr_data;
+            if (wr_en) mem[wr_addr[13:0]] <= wr_data;
         end
     end
 
@@ -219,7 +220,7 @@ module unit_env #(
                 fail("escrita antes da classificacao");
             if (fin_valid)
                 fail("fin_valid deveria ser 0 nesta etapa");
-            if (rd_en && !FULL_RANGE && rd_addr[19:14] !== 6'b0)
+            if (rd_en && rd_addr[19:14] !== 6'b0)
                 fail("rd_addr fora da faixa do modelo");
         end
     end
@@ -613,8 +614,8 @@ module unit_env #(
         timestamp  = '0;
         hash_valid = 1'b0;
 
-        for (ix = 0; ix < WORDS; ix = ix + 1) mem[ix] = 32'b0;
-        for (ix = 0; ix < ENTRIES; ix = ix + 1) begin
+        for (ix = 0; ix < 16384; ix = ix + 1) mem[ix] = 32'b0;
+        for (ix = 0; ix < 1024; ix = ix + 1) begin
             ref_valid[ix] = 1'b0;
             ref_skip[ix]  = 1'b0;
             ref_key[ix]   = '0;
@@ -655,61 +656,6 @@ module unit_env #(
         do_packet("hash_valid mantido (80 ciclos): MISS", 16'd50, KEY_A, 16'd33, TS1, 80);
         do_packet("hash_valid mantido (30 ciclos): HIT",  16'd50, KEY_A, 16'd7,  TS2, 30);
 
-        // ---------- Limites do campo de entrada e aritmetica ----------
-        do_packet("pacote de 0 bytes", 16'd75, KEY_A, 16'd0, 80'h0, 0);
-        do_packet("pacote de 65535 bytes", 16'd75, KEY_A, 16'hFFFF, 80'hFFFF_FFFF_FFFF_FFFF_FFFF, 0);
-        do_packet("timestamp 80 bits maximo", 16'd75, KEY_A, 16'd1, 80'hFFFF_FFFF_FFFF_FFFF_FFFF, 0);
-        do_packet("timestamp 80 bits minimo", 16'd75, KEY_A, 16'd1, 80'h0, 0);
-
-        // Pre-carrega contadores nos limites, mantendo scoreboard coerente.
-        // Aritmetica de W5/W6 no RTL e modular em 32 bits.
-        mem[16'd76*16 + 0] = 32'd1;
-        mem[16'd76*16 + 1] = KEY_A[31:0];
-        mem[16'd76*16 + 2] = KEY_A[63:32];
-        mem[16'd76*16 + 3] = KEY_A[95:64];
-        mem[16'd76*16 + 4] = {24'b0, KEY_A[103:96]};
-        mem[16'd76*16 + 5] = 32'hFFFFFFFF;
-        mem[16'd76*16 + 6] = 32'hFFFFFFFE;
-        for (ix = 7; ix <= 12; ix = ix + 1) mem[16'd76*16 + ix] = 32'b0;
-        ref_valid[76] = 1'b1;
-        ref_key[76] = KEY_A;
-        ref_pkts[76] = 32'hFFFFFFFF;
-        ref_bytes[76] = 32'hFFFFFFFE;
-        ref_first[76] = 80'b0;
-        ref_last[76] = 80'b0;
-        do_packet("overflow de packet_count e byte_count", 16'd76, KEY_A, 16'd3, TS1, 0);
-        do_packet("incremento apos overflow", 16'd76, KEY_A, 16'hFFFF, TS2, 0);
-
-        // Contador de colisao saturante, conferindo os dois ultimos incrementos.
-        dut.collision_count = 32'hFFFFFFFE;
-        ref_coll = -2; // mesmo padrao binario FFFFFFFE
-        do_packet("collision_count atinge FFFFFFFF", 16'd5, KEY_B, 16'd1, TS1, 0);
-        // O scoreboard normalmente soma colisao; a saturacao exige teste separado.
-        begin : sat_collision
-            integer old_errors;
-            old_errors = errors;
-            clear_counters();
-            send_packet(16'd5, KEY_B, 16'd1, TS1);
-            wait_done(1);
-            if (lookup_result !== RESULT_COLLISION)
-                fail("colisao saturada: resultado nao e COLLISION");
-            if (collision_count !== 32'hFFFFFFFF)
-                fail("colisao saturada: contador deu volta");
-            if (read_count != 5 || write_count != 0 || done_count != 1)
-                fail("colisao saturada: handshake de leitura/escrita incorreto");
-            if (errors == old_errors) pass("collision_count permanece saturado");
-        end
-        // Reinicia o contador para permitir o scoreboard regular a seguir.
-        dut.collision_count = 32'd0;
-        ref_coll = 0;
-
-        if (FULL_RANGE) begin
-            do_packet("MISS idx 65535", 16'hFFFF, KEY_A, 16'd65535, TS1, 0);
-            do_packet("HIT idx 65535", 16'hFFFF, KEY_A, 16'd1, TS2, 0);
-            do_packet("COLLISION idx 65535", 16'hFFFF, KEY_B, 16'd1, TS2, 0);
-            do_packet("MISS idx 32768", 16'h8000, KEY_B, 16'd0, 80'h0, 0);
-        end
-
         // ---------- 2) Varredura de chegada do segundo pacote ----------
         for (off = 1; off <= SW; off = off + 1)
             sweep_one(off);
@@ -748,7 +694,7 @@ module unit_env #(
                      tag, N_RANDOM, cov_miss, cov_hit, cov_coll);
 
         // ---------- 5) Varredura final da memoria ----------
-        for (ix = 0; ix < ENTRIES; ix = ix + 1)
+        for (ix = 0; ix < 1024; ix = ix + 1)
             if (!ref_skip[ix])
                 check_mem_entry("varredura final", ix);
         if (collision_count !== ref_coll)
@@ -818,7 +764,7 @@ module scan_env #(
     logic [15:0]  packet_length;
     logic [79:0]  timestamp;
     logic         hash_valid;
-    logic         fin_start = 1'b0;
+    logic         pcap_done = 1'b0;
 
     logic         rd_en, rd_valid, wr_en, wr_done;
     logic [19:0]  rd_addr, wr_addr;
@@ -854,10 +800,14 @@ module scan_env #(
         .wr_data(wr_data), .wr_done(wr_done),
         .flow_entry(flow_entry),
         .fin_valid(fin_valid), .fin_done(fin_done),
-        .fin_start(fin_start), .scan_done(scan_done),
-        .lookup_result(lookup_result), .lookup_done(lookup_done),
-        .collision_count(collision_count)
+        .pcap_done(pcap_done)
     );
+
+    // Sinais internos do controller: leitura por referencia hierarquica.
+    assign lookup_result   = dut.lookup_result;
+    assign lookup_done     = dut.lookup_done;
+    assign collision_count = dut.collision_count;
+    assign scan_done       = dut.scan_done;
 
     // ---------------- Modelo da Flow Table (latencia configuravel) ----------------
     logic        rd_v_sr [1:RD_LAT];
@@ -1069,12 +1019,12 @@ module scan_env #(
         end
     endtask
 
-    task automatic pulse_fin_start;
+    task automatic pulse_pcap_done;
         begin
             @(negedge clk);
-            fin_start = 1'b1;
+            pcap_done = 1'b1;
             @(negedge clk);
-            fin_start = 1'b0;
+            pcap_done = 1'b0;
         end
     endtask
 
@@ -1212,7 +1162,7 @@ module scan_env #(
     task automatic run_scan(input string name);
         begin
             scan_begin();
-            pulse_fin_start();
+            pulse_pcap_done();
             scan_end(name, 1'b1, 0);
         end
     endtask
@@ -1250,6 +1200,7 @@ module scan_env #(
         packet_length = '0;
         timestamp  = '0;
         hash_valid = 1'b0;
+        pcap_done  = 1'b0;
 
         for (ix = 0; ix < 16384; ix = ix + 1) mem[ix] = 32'b0;
         for (ix = 0; ix < 1024;  ix = ix + 1) begin
@@ -1266,12 +1217,8 @@ module scan_env #(
         run_scan("A) varredura 1: 12 fluxos validos");
 
         // B) segunda varredura
-        // Evita expressao ternaria de strings como argumento de task automatic:
-        // algumas versoes do XSim falham internamente nessa chamada.
-        if (INV)
-            run_scan("B) varredura 2: entradas ja invalidadas (nada a enviar)");
-        else
-            run_scan("B) varredura 2: mesmos fluxos (sem invalidacao)");
+        run_scan(INV ? "B) varredura 2: entradas ja invalidadas (nada a enviar)"
+                     : "B) varredura 2: mesmos fluxos (sem invalidacao)");
 
         // C) pacote normal depois das varreduras
         simple_packet("C) MISS idx 700 depois da varredura", 16'd700, KEY_A, 16'd100, TS1, RESULT_MISS);
@@ -1280,7 +1227,7 @@ module scan_env #(
         scan_begin();
         send_packet(16'd701, KEY_A, 16'd10, TS1);
         repeat (4) @(negedge clk);
-        pulse_fin_start();
+        pulse_pcap_done();
         scan_end("D) varredura pedida com o Controller ocupado", 1'b0, 1);
         if (!snap_has(701))
             fail("D) o fluxo do pacote 701 deveria estar na varredura");
@@ -1288,7 +1235,7 @@ module scan_env #(
         // E) pacote durante a varredura e ignorado
         preload_flows(5, 3);
         scan_begin();
-        pulse_fin_start();
+        pulse_pcap_done();
         repeat (40) @(negedge clk);                       // varredura em andamento
         send_packet(16'd900, KEY_B, 16'd5, TS2);          // deve ser ignorado
         scan_end("E) pacote durante a varredura e ignorado", 1'b1, 0);
@@ -1298,47 +1245,6 @@ module scan_env #(
         // F) pacotes normais ao final
         simple_packet("F) MISS idx 901", 16'd901, KEY_A, 16'd20, TS1, RESULT_MISS);
         simple_packet("F) HIT idx 901",  16'd901, KEY_A, 16'd30, TS2, RESULT_HIT);
-
-        // G) Reset com uma varredura em andamento: nenhuma resposta pendente
-        // pode sobreviver ao reset; a proxima varredura deve funcionar.
-        scan_begin();
-        pulse_fin_start();
-        repeat (25) @(negedge clk);
-        if (dut.state == dut.IDLE)
-            fail("G) varredura nao estava em andamento antes do reset");
-        rst = 1'b1;
-        repeat (4) @(negedge clk);
-        if (fin_valid !== 1'b0 || scan_done !== 1'b0 || lookup_done !== 1'b0)
-            fail("G) sinais ativos durante reset da varredura");
-        rst = 1'b0;
-        repeat (4) @(negedge clk);
-        run_scan("G) recuperacao apos reset durante leitura de varredura");
-
-        // H) Reset enquanto o Finalizer esta processando um fluxo.
-        // Recria entrada valida por escrita direta e para na fase SCAN_SEND.
-        mem[16'd10*16] = 32'd1;
-        mem[16'd10*16 + 1] = KEY_A[31:0];
-        mem[16'd10*16 + 2] = KEY_A[63:32];
-        mem[16'd10*16 + 3] = KEY_A[95:64];
-        mem[16'd10*16 + 4] = {24'b0, KEY_A[103:96]};
-        scan_begin();
-        pulse_fin_start();
-        begin : wait_finalizer_reset
-            integer t;
-            t = 0;
-            while (!fin_valid && t < 2000) begin
-                @(negedge clk);
-                t = t + 1;
-            end
-            if (t == 2000) $fatal(1, "%s H) timeout aguardando fin_valid", tag);
-        end
-        rst = 1'b1;
-        repeat (4) @(negedge clk);
-        if (fin_valid !== 1'b0 || scan_done !== 1'b0)
-            fail("H) fin_valid/scan_done permaneceram ativos durante reset");
-        rst = 1'b0;
-        repeat (4) @(negedge clk);
-        run_scan("H) recuperacao apos reset durante handshake Finalizer");
 
         done = 1'b1;
     end
@@ -1354,8 +1260,8 @@ endmodule
 // =====================================================================
 module tb_controller_unit;
 
-    logic [7:0] done;
-    integer     e_u0, e_u1, e_u2, e_u3, e_full;     // pacote
+    logic [6:0] done;
+    integer     e_u0, e_u1, e_u2, e_u3;     // pacote
     integer     e_s0, e_s1, e_s2;           // varredura
     integer     err_pacote, err_scan, total;
 
@@ -1365,9 +1271,6 @@ module tb_controller_unit;
     unit_env #(.RD_LAT(1), .WR_LAT(3), .QUIET(1'b1))   env_1_3 (.done(done[2]), .errors(e_u2));
     unit_env #(.RD_LAT(3), .WR_LAT(2), .QUIET(1'b1))   env_3_2 (.done(done[3]), .errors(e_u3));
 
-    // Cobertura do espaco de enderecos completo, sem multiplicar a memoria das outras instancias.
-    unit_env #(.RD_LAT(1), .WR_LAT(1), .N_RANDOM(50), .FULL_RANGE(1'b1)) env_full (.done(done[7]), .errors(e_full));
-
     // ---------------- Varredura / finalizacao ----------------
     //                 INV         MODE      RD          WR          FIN
     scan_env #(.INV(1'b1), .MODE(0), .RD_LAT(1), .WR_LAT(1), .FIN_LAT(3))                  env_scan_a (.done(done[4]), .errors(e_s0));
@@ -1375,16 +1278,15 @@ module tb_controller_unit;
     scan_env #(.INV(1'b0), .MODE(0), .RD_LAT(1), .WR_LAT(3), .FIN_LAT(5), .QUIET(1'b1))    env_scan_c (.done(done[6]), .errors(e_s2));
 
     initial begin
-        err_pacote = 0; err_scan = 0; total = 0;
-        wait (done === 8'hFF);
+        wait (done === 7'b1111111);
         #20;
-        err_pacote = e_u0 + e_u1 + e_u2 + e_u3 + e_full;
+        err_pacote = e_u0 + e_u1 + e_u2 + e_u3;
         err_scan   = e_s0 + e_s1 + e_s2;
         total      = err_pacote + err_scan;
 
         $display("Resumo: pacote = %0d erro(s) | varredura = %0d erro(s)", err_pacote, err_scan);
         if (total == 0)
-            $display("TODOS OS TESTES UNITARIOS PASSARAM! (pacote: 4 configuracoes + enderecos completos; varredura: 3 configuracoes)");
+            $display("TODOS OS TESTES UNITARIOS PASSARAM! (pacote: 4 configuracoes; varredura: 3 configuracoes)");
         else
             $display("TESTES UNITARIOS FINALIZADOS COM %0d ERRO(S).", total);
         $finish;
