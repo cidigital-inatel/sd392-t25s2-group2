@@ -1,100 +1,18 @@
 Time resolution is 1 ps
-[RD=1 WR=1] PASSOU: MISS idx 5
-[RD=1 WR=1] PASSOU: MISS idx 5
-[RD=1 WR=1] PASSOU: HIT idx 5
-[RD=1 WR=1] PASSOU: HIT idx 5
-[RD=1 WR=1] PASSOU: COLLISION chave diferente
-[RD=1 WR=1] PASSOU: COLLISION chave diferente
-[RD=1 WR=1] PASSOU: COLLISION bit 103
-[RD=1 WR=1] PASSOU: COLLISION bit 103
-[RD=1 WR=1] PASSOU: COLLISION bit 0
-[RD=1 WR=1] PASSOU: COLLISION bit 0
-[RD=1 WR=1] PASSOU: HIT apos colisoes
-[RD=1 WR=1] PASSOU: HIT apos colisoes
-[RD=1 WR=1] PASSOU: HIT com bits reservados sujos
-[RD=1 WR=1] PASSOU: HIT com bits reservados sujos
-[RD=1 WR=1] PASSOU: COLLISION com bits reservados sujos
-[RD=1 WR=1] PASSOU: COLLISION com bits reservados sujos
-[RD=1 WR=1] PASSOU: MISS com W0 = FFFFFFFE
-[RD=1 WR=1] PASSOU: MISS com W0 = FFFFFFFE
-[RD=1 WR=1] PASSOU: MISS idx 0
-[RD=1 WR=1] PASSOU: MISS idx 0
-[RD=1 WR=1] PASSOU: MISS idx 1023
-[RD=1 WR=1] PASSOU: MISS idx 1023
-[RD=1 WR=1] PASSOU: hash_valid mantido (80 ciclos): MISS
-[RD=1 WR=1] PASSOU: hash_valid mantido (80 ciclos): MISS
-[RD=1 WR=1] PASSOU: hash_valid mantido (30 ciclos): HIT
-[RD=1 WR=1] PASSOU: hash_valid mantido (30 ciclos): HIT
-[RD=1 WR=1] PASSOU: pacote de 0 bytes
-[RD=1 WR=1] PASSOU: pacote de 0 bytes
-[RD=1 WR=1] PASSOU: pacote de 65535 bytes
-[RD=1 WR=1] PASSOU: pacote de 65535 bytes
-[RD=1 WR=1] PASSOU: timestamp 80 bits maximo
-[RD=1 WR=1] PASSOU: timestamp 80 bits maximo
-[RD=1 WR=1] PASSOU: timestamp 80 bits minimo
-[RD=1 WR=1] PASSOU: timestamp 80 bits minimo
-[RD=1 WR=1] PASSOU: overflow de packet_count e byte_count
-[RD=1 WR=1] PASSOU: overflow de packet_count e byte_count
-[RD=1 WR=1] PASSOU: incremento apos overflow
-[RD=1 WR=1] PASSOU: incremento apos overflow
-[RD=1 WR=1] PASSOU: collision_count atinge FFFFFFFF
-[RD=1 WR=1] PASSOU: collision_count atinge FFFFFFFF
-[RD=1 WR=1] PASSOU: collision_count permanece saturado
-[RD=1 WR=1] PASSOU: collision_count permanece saturado
-[RD=1 WR=1] PASSOU: MISS idx 65535
-[RD=1 WR=1] PASSOU: HIT idx 65535
-[RD=1 WR=1] PASSOU: COLLISION idx 65535
-[RD=1 WR=1] PASSOU: MISS idx 32768
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]   A) varredura 1: 12 fluxos validos: 12 fluxo(s) enviado(s) ao Finalizer (leituras=1168, escritas=12)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 0: indice=64 chave=e05696af730897b902428ae798 pacotes=1665502558 bytes=3065728047
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 1: indice=80 chave=3788493a4065710acd76a14009 pacotes=1302748154 bytes=563794113
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 2: indice=86 chave=fc3f0044cf8448d9c3bbe4fd26 pacotes=1613815738 bytes=1738914510
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 3: indice=140 chave=555da7a04f9de78b84b62a145d pacotes=1716556554 bytes=1492556099
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: A) varredura 1: 12 fluxos validos
-[RD=1 WR=1] PASSOU: varredura de pacote ocupado (46 deslocamentos)
-[RD=1 WR=1] PASSOU: Reset durante o lookup
-[RD=1 WR=1] PASSOU: Reset durante as escritas
-[RD=1 WR=1] PASSOU: Recuperacao apos reset: MISS
-[RD=1 WR=1] PASSOU: Recuperacao apos reset: COLLISION
-[RD=1 WR=1] PASSOU: varredura de pacote ocupado (46 deslocamentos)
-[RD=1 WR=1] PASSOU: Reset durante o lookup
-[RD=1 WR=1] PASSOU: Reset durante as escritas
-[RD=1 WR=1] PASSOU: Recuperacao apos reset: MISS
-[RD=1 WR=1] PASSOU: Recuperacao apos reset: COLLISION
-[RD=2 WR=1] PASSOU: varredura de pacote ocupado (51 deslocamentos)
-[RD=1 WR=1] PASSOU: regressao aleatoria (50 pacotes; total no teste: MISS=33 HIT=25 COLLISION=18)
-[RD=1 WR=1] PASSOU: varredura final da memoria (collision_count = 12)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]   B) varredura 2: entradas ja invalidadas (nada a enviar): 0 fluxo(s) enviado(s) ao Finalizer (leituras=1024, escritas=0)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: B) varredura 2: entradas ja invalidadas (nada a enviar)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: C) MISS idx 700 depois da varredura
-[RD=3 WR=2] PASSOU: varredura de pacote ocupado (69 deslocamentos)
-[RD=1 WR=3] PASSOU: varredura de pacote ocupado (72 deslocamentos)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]   D) varredura pedida com o Controller ocupado: 2 fluxo(s) enviado(s) ao Finalizer (leituras=1053, escritas=15)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 0: indice=700 chave=123456789abcdef123456789ab pacotes=1 bytes=100
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 1: indice=701 chave=123456789abcdef123456789ab pacotes=1 bytes=10
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: D) varredura pedida com o Controller ocupado
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]   E) pacote durante a varredura e ignorado: 5 fluxo(s) enviado(s) ao Finalizer (leituras=1084, escritas=5)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 0: indice=125 chave=3c87e472fb26de116a575cf2ec pacotes=1543552478 bytes=167749889
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 1: indice=285 chave=f9b1d15cc4bb76a61140138649 pacotes=810311503 bytes=1966876605
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 2: indice=381 chave=28211ea292620486627c949f3d pacotes=2558463274 bytes=1405574576
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 3: indice=644 chave=f157cbbe1ca2656285135a4648 pacotes=1942254907 bytes=422704003
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: E) pacote durante a varredura e ignorado
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: F) MISS idx 901
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: F) HIT idx 901
-[RD=1 WR=1] PASSOU: regressao aleatoria (300 pacotes; total no teste: MISS=45 HIT=141 COLLISION=136)
-[RD=1 WR=1] PASSOU: varredura final da memoria (collision_count = 131)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]   G) recuperacao apos reset durante leitura de varredura: 1 fluxo(s) enviado(s) ao Finalizer (leituras=1036, escritas=1)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 0: indice=901 chave=123456789abcdef123456789ab pacotes=2 bytes=50
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: G) recuperacao apos reset durante leitura de varredura
-[RD=2 WR=1] PASSOU: regressao aleatoria (300 pacotes; total no teste: MISS=45 HIT=158 COLLISION=119)
-[RD=2 WR=1] PASSOU: varredura final da memoria (collision_count = 114)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]   H) recuperacao apos reset durante handshake Finalizer: 1 fluxo(s) enviado(s) ao Finalizer (leituras=1036, escritas=1)
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3]     fluxo 0: indice=10 chave=123456789abcdef123456789ab pacotes=0 bytes=0
-[SCAN INV=1 MODE=0 RD=1 WR=1 FIN=3] PASSOU: H) recuperacao apos reset durante handshake Finalizer
-[RD=1 WR=3] PASSOU: regressao aleatoria (300 pacotes; total no teste: MISS=45 HIT=160 COLLISION=117)
-[RD=1 WR=3] PASSOU: varredura final da memoria (collision_count = 112)
-[RD=3 WR=2] PASSOU: regressao aleatoria (300 pacotes; total no teste: MISS=45 HIT=137 COLLISION=140)
-[RD=3 WR=2] PASSOU: varredura final da memoria (collision_count = 135)
-Resumo: pacote = 0 erro(s) | varredura = 0 erro(s)
-TODOS OS TESTES UNITARIOS PASSARAM! (pacote: 4 configuracoes + enderecos completos; varredura: 3 configuracoes)
-$finish called at time : 259390 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_unit.sv" Line 1398
+PASSOU: MISS idx 10
+PASSOU: HIT idx 10
+PASSOU: COLLISION chave diferente
+PASSOU: COLLISION bit 0
+PASSOU: COLLISION bit 103
+PASSOU: HIT com bits reservados sujos
+PASSOU: MISS com W0 = FFFFFFFE
+PASSOU: MISS idx 0
+PASSOU: MISS idx 65535
+PASSOU: Sequencia: MISS
+PASSOU: Sequencia: HIT 1
+PASSOU: Sequencia: HIT 2
+PASSOU: hash_valid mantido em nivel alto
+PASSOU: Nova captura apos valid em baixo
+PASSOU: Pacote com Controller ocupado e ignorado
+TODOS OS TESTES PASSARAM!
+$finish called at time : 5700 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_controller_base.sv" Line 468
