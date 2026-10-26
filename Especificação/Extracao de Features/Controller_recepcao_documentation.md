@@ -14,11 +14,10 @@ O Controller coordena o processamento de cada pacote:
 
 ```mermaid
 flowchart LR
-    MD["Metadados do pacote<br/>hash_index, flow_key,<br/>packet_length, timestamp,<br/>hash_valid"] --> C[Controller]
-    PD[pcap_done] --> C
-    C <-->|"rd_*, wr_*"| FT[Flow Table]
-    C -->|"flow_entry, fin_valid"| FF[Flow Finalizer]
-    FF -->|fin_done| C
+    A["Pacote chega<br/>(hash_valid + dados)"] --> C["Controller<br/>decide o que fazer"]
+    P["Fim dos dados<br/>(pcap_done)"] --> C
+    C <--> M[("Flow Table<br/>memória dos fluxos")]
+    C --> F["Flow Finalizer<br/>gera o vetor de features"]
 ```
 
 **O que acontece com um pacote:**
@@ -150,39 +149,22 @@ end
 
 ### 1.5. FSM
 
+**Caminho de um pacote:**
+
 ```mermaid
-stateDiagram-v2
-    [*] --> IDLE
-    IDLE --> LOOKUP_REQ: start
-    IDLE --> SCAN_V_REQ: pedido de varredura
-    LOOKUP_REQ --> LOOKUP_WAIT
-    LOOKUP_WAIT --> LOOKUP_REQ: rd_valid, palavra menor que W4
-    LOOKUP_WAIT --> CLASSIFY: rd_valid, palavra igual a W4
-    CLASSIFY --> PREPARE_WRITE: MISS
-    CLASSIFY --> HIT_READ_REQ: HIT
-    CLASSIFY --> WAIT_VALID_LOW: COLLISION
-    HIT_READ_REQ --> HIT_READ_WAIT
-    HIT_READ_WAIT --> HIT_READ_REQ: W5 lido
-    HIT_READ_WAIT --> PREPARE_WRITE: W6 lido
-    PREPARE_WRITE --> WRITE_REQ
-    WRITE_REQ --> WRITE_WAIT
-    WRITE_WAIT --> WRITE_REQ: wr_done, nao e W12
-    WRITE_WAIT --> WAIT_VALID_LOW: wr_done, W12
-    WAIT_VALID_LOW --> IDLE: hash_valid = 0
-    SCAN_V_REQ --> SCAN_V_WAIT
-    SCAN_V_WAIT --> SCAN_R_REQ: valid = 1
-    SCAN_V_WAIT --> SCAN_NEXT: valid = 0
-    SCAN_R_REQ --> SCAN_R_WAIT
-    SCAN_R_WAIT --> SCAN_R_REQ: palavra menor que W12
-    SCAN_R_WAIT --> SCAN_SEND: W12 lido
-    SCAN_SEND --> SCAN_ACK_LOW: fin_done
-    SCAN_ACK_LOW --> SCAN_INV_REQ: fin_done = 0 e invalida
-    SCAN_ACK_LOW --> SCAN_NEXT: fin_done = 0 sem invalidar
-    SCAN_INV_REQ --> SCAN_INV_WAIT
-    SCAN_INV_WAIT --> SCAN_NEXT: wr_done
-    SCAN_NEXT --> SCAN_V_REQ: proxima entrada
-    SCAN_NEXT --> IDLE: fim da varredura
+flowchart TD
+    A["Pacote chega (hash_valid)"] --> B["Captura os dados<br/>(só se o Controller estiver livre)"]
+    B --> C["Lê a entrada na Flow Table<br/>(W0 a W4)"]
+    C --> D{"O que há<br/>na entrada?"}
+    D -->|"Nada (vazia)"| E["MISS<br/>cria o fluxo"]
+    D -->|"O mesmo fluxo"| F["HIT<br/>atualiza os contadores"]
+    D -->|"Outro fluxo"| G["COLLISION<br/>não altera a entrada<br/>e conta a colisão"]
+    E --> H["Espera hash_valid baixar<br/>e fica livre de novo"]
+    F --> H
+    G --> H
 ```
+
+A tabela abaixo detalha cada estado da FSM, para quem for ler o código (são 19 estados, 9 do pacote e 10 da varredura).
 
 | Estado | Função | Próximo estado |
 |---|---|---|
@@ -265,6 +247,18 @@ W0–W4 já estão corretos e **W7–W9** (`first_timestamp`) não são lidos ne
 ### 1.9. Varredura e finalização
 
 Quando os dados acabam, o Controller percorre a Flow Table e entrega cada fluxo ao Flow Finalizer.
+
+```mermaid
+flowchart TD
+    A["pcap_done: acabaram os dados"] --> B["Vai para a próxima entrada"]
+    B --> C{"A entrada está<br/>ocupada?"}
+    C -->|"Não"| B
+    C -->|"Sim"| D["Lê o registro e<br/>entrega ao Finalizer"]
+    D --> E["Espera o fin_done"]
+    E --> F["Apaga a entrada<br/>(valid = 0)"]
+    F --> B
+    B -->|"Acabaram as entradas"| G["Fim da varredura"]
+```
 
 1. **Disparo.** `pcap_done` (pulso do testbench) cria um pedido de varredura, detectado na **borda de subida**: funciona com pulso e também com nível alto. Se o Controller estiver ocupado com um pacote, o pedido é **memorizado** e a varredura começa quando ele voltar a `IDLE`.
 2. **Varredura.** Para cada entrada de 0 até `SCAN_ENTRIES - 1`, lê W0. Se `valid = 0`, passa para a próxima. Se `valid = 1`, lê W1 a W12 para o `flow_entry`.
