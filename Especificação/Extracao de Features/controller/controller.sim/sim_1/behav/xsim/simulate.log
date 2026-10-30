@@ -3,3 +3,38 @@ Time resolution is 1 ps
 TESTE 1: Fluxo A - dois pacotes
 
 TESTE 2: Fluxo B - um pacote
+
+TESTE 3: Fluxo C - trÃªs pacotes
+
+TESTE 4: Fluxo D - timestamps maiores
+
+TESTE 5: Fluxo E - varios pacotes
+
+TESTE 6: Varredura da Flow Table
+[4945000 ns] Feature 1 recebida: 00000000000123456789abcdef000000020000012c00000000000000000032
+[5295000 ns] Feature 2 recebida: 00000000000abcdef12345678900000002000004000000000000000007a120
+[5645000 ns] Feature 3 recebida: 00000000000fedcba987654321000000010000012c00000000000000000000
+[5995000 ns] Feature 4 recebida: 00000000000987654321abcdef00000005000005dc00000000000000000190
+[6345000 ns] Feature 5 recebida: 0000000000011223344556677800000003000001c0000000000000000000c8
+
+TESTE 7: Quantidade de features
+PASSOU: cinco fluxos encontrados.
+
+TESTE 8: Conferencia das features
+PASSOU: chave=00000000000123456789abcdef | pacotes=2 | bytes=300 | duracao=50
+PASSOU: chave=00000000000fedcba987654321 | pacotes=1 | bytes=300 | duracao=0
+PASSOU: chave=00000000000112233445566778 | pacotes=3 | bytes=448 | duracao=200
+PASSOU: chave=00000000000abcdef123456789 | pacotes=2 | bytes=1024 | duracao=500000
+PASSOU: chave=00000000000987654321abcdef | pacotes=5 | bytes=1500 | duracao=400
+
+TESTE 9: Verificacao de duplicidade
+PASSOU: nenhum vetor duplicado.
+
+TESTE 10: Verificacao de invalidacao
+PASSOU: nenhuma entrada foi reenviada.
+
+======================================
+TODOS OS TESTES PASSARAM!
+Total de fluxos testados: 5
+======================================
+$finish called at time : 106585 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_top_extracao_features.sv" Line 366
