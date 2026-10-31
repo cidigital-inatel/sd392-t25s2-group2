@@ -1,10 +1,27 @@
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/controller_base.sv" into library xil_defaultlib
 INFO: [VRFC 10-311] analyzing module controller
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/fiu_hash_top.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module fiu_hash_top
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/flow_finalizer.sv" into library xil_defaultlib
 INFO: [VRFC 10-311] analyzing module flow_finalizer_v3
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/flow_identification_unit.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module flow_identification_unit
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/flow_table.sv" into library xil_defaultlib
 INFO: [VRFC 10-311] analyzing module flow_table
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features.sv" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module top_extracao_features
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_top_extracao_features.sv" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module tb_top_extracao_features
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/hash_unit.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module hash_unit
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module top_extracao_features_com_entrada
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'clk' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:8]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'reset_n' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:9]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'src_ip_in' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:12]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'dst_ip_in' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:13]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'src_port_in' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:14]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'dst_port_in' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:15]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'protocol_in' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:16]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'packet_length_in' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:17]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'timestamp_in' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:18]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'in_valid' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:19]
+WARNING: [VRFC 10-1103] net type must be explicitly specified for 'pcap_done' when default_nettype is none [C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/top_extracao_features_entrada.sv:22]
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_top_extracao_features_com_entrada.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module tb_top_extracao_features_com_entrada
