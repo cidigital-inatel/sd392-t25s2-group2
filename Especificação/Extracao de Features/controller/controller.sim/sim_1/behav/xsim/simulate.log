@@ -1,0 +1,23 @@
+Time resolution is 1 ps
+==================================================
+TB de integracao: 181 vetores
+==================================================
+Vetores enviados: 1/181
+Vetores enviados: 21/181
+Vetores enviados: 41/181
+Vetores enviados: 61/181
+Vetores enviados: 81/181
+Vetores enviados: 101/181
+Vetores enviados: 121/181
+Vetores enviados: 141/181
+Vetores enviados: 161/181
+Vetores enviados: 181/181
+Todos os pacotes enviados. Solicitando varredura...
+==================================================
+SIMULACAO CONCLUIDA
+Pacotes enviados: 181
+Features finalizadas: 179
+A quantidade de features pode ser menor que 181 devido a colisoes CRC16.
+PASSOU: CRCs e metadados conferidos; varredura concluida.
+==================================================
+$finish called at time : 2195550 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_top_extracao_features_com_entrada.sv" Line 168
