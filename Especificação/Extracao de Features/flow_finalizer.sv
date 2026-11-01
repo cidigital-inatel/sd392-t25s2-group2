@@ -12,7 +12,9 @@ module flow_finalizer_v3 (
     output logic         fin_done
 );
 
+    // ------------------------------------------------------------
     // Campos extraidos do registro
+    // ------------------------------------------------------------
     logic [103:0] flow_key;
     logic [31:0]  packet_count;
     logic [31:0]  byte_count;
@@ -26,68 +28,63 @@ module flow_finalizer_v3 (
 
     // ------------------------------------------------------------
     // Extracao dos campos de flow_entry
+    //
+    // flow_entry[383:0] contem W1-W12:
+    // [103:0]   : flow_key (104 bits)
+    // [159:128] : packet_count (32 bits)
+    // [191:160] : byte_count (32 bits)
+    // [271:192] : first_timestamp (80 bits)
+    // [383:288] : last_timestamp (80 bits)
     // ------------------------------------------------------------
     always_comb begin
-
-        // W1-W4: chave do fluxo (104 bits validos)
         flow_key = flow_entry[103:0];
 
-        // W5: quantidade de pacotes
         packet_count = flow_entry[159:128];
+        byte_count   = flow_entry[191:160];
 
-        // W6: quantidade de bytes
-        byte_count = flow_entry[191:160];
-
-        // W7-W9: timestamp inicial (80 bits)
+        // Timestamp inicial: W7-W9
         first_timestamp = {
             flow_entry[271:256],
             flow_entry[255:192]
         };
 
-        // W10-W12: timestamp final (80 bits)
+        // Timestamp final: W10-W12
         last_timestamp = {
             flow_entry[367:352],
             flow_entry[351:288]
         };
 
-        // Duracao do fluxo
+        // Duracao do fluxo (aritmetica unsigned de 80 bits)
         duration = last_timestamp - first_timestamp;
-
     end
 
     // ------------------------------------------------------------
     // Recepcao e confirmacao do registro
     // ------------------------------------------------------------
     always_ff @(posedge clk) begin
-
         if (rst) begin
             feature_vector <= '0;
             fin_done       <= 1'b0;
             fin_seen       <= 1'b0;
-
         end else begin
-
-            // Confirmacao em pulso de um ciclo
+            // fin_done e um pulso de um ciclo
             fin_done <= 1'b0;
 
-            // Libera a recepcao para o proximo registro
+            // Rearma o recebimento quando fin_valid retornar a zero
             if (!fin_valid) begin
                 fin_seen <= 1'b0;
             end
-
             // Processa somente uma vez enquanto fin_valid estiver ativo
             else if (!fin_seen) begin
-
                 feature_vector <= {
-                    flow_key,
-                    packet_count,
-                    byte_count,
-                    duration
+                    flow_key,       // 104 bits
+                    packet_count,   // 32 bits
+                    byte_count,     // 32 bits
+                    duration        // 80 bits
                 };
 
                 fin_done <= 1'b1;
                 fin_seen <= 1'b1;
-
             end
         end
     end
