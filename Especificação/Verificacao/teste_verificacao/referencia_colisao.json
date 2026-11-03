@@ -1,0 +1,30 @@
+{
+  "purpose": "Directed CRC16 collision test for the Flow Table policy",
+  "hash_index": "0x58BC",
+  "packet_a": {
+    "src_ip": "10.1.26.137",
+    "dst_ip": "192.0.2.1",
+    "src_port": 2248,
+    "dst_port": 443,
+    "protocol": 6,
+    "packet_length": 40,
+    "timestamp_ns": 1000000000,
+    "flow_key_hex": "0a011a89c000020108c801bb06",
+    "classification": "MISS"
+  },
+  "packet_b": {
+    "src_ip": "10.1.59.180",
+    "dst_ip": "192.0.2.1",
+    "src_port": 22004,
+    "dst_port": 443,
+    "protocol": 6,
+    "packet_length": 60,
+    "timestamp_ns": 1000100000,
+    "flow_key_hex": "0a013bb4c000020155f401bb06",
+    "classification": "COLLISION"
+  },
+  "expected_collision_count": 1,
+  "expected_table_policy": "Preserve packet A entry; discard packet B; do not increment bytes or packet count",
+  "expected_exported_features": 1,
+  "expected_feature_vector_hex": "0a011a89c000020108c801bb06000000010000002800000000000000000000"
+}

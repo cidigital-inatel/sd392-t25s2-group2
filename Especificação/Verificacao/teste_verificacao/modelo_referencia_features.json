@@ -1,0 +1,247 @@
+{
+  "pcap": "trafego_referencia_P01_P14.pcap",
+  "contract": {
+    "flow_direction": "unidirectional",
+    "flow_key": "src_ip || dst_ip || src_port || dst_port || protocol",
+    "packet_length": "IPv4 Total Length",
+    "byte_count": "sum of IPv4 Total Length",
+    "timestamp": "unsigned 80-bit scalar nanoseconds",
+    "hash": "CRC-16/CCITT-FALSE, poly=0x1021, init=0xFFFF, no reflection, xorout=0",
+    "collision_policy": "discard new packet; do not overwrite existing hash slot"
+  },
+  "summary": {
+    "packet_records": 14,
+    "valid_metadata_packets": 8,
+    "dropped_packets": 6,
+    "classification_counts": {
+      "MISS": 4,
+      "HIT": 4,
+      "COLLISION": 0
+    },
+    "features": 4,
+    "dropped": [
+      {
+        "packet": 9,
+        "tuser": 1,
+        "frame_bytes": 42
+      },
+      {
+        "packet": 10,
+        "tuser": 1,
+        "frame_bytes": 62
+      },
+      {
+        "packet": 11,
+        "tuser": 1,
+        "frame_bytes": 54
+      },
+      {
+        "packet": 12,
+        "tuser": 0,
+        "frame_bytes": 54
+      },
+      {
+        "packet": 13,
+        "tuser": 1,
+        "frame_bytes": 54
+      },
+      {
+        "packet": 14,
+        "tuser": 1,
+        "frame_bytes": 32
+      }
+    ]
+  },
+  "packet_results": [
+    {
+      "packet": 1,
+      "classification": "MISS",
+      "hash_index": 40984,
+      "flow_key_hex": "c0a8010a08080808cb8401bb06",
+      "src_ip": "c0a8010a",
+      "dst_ip": "08080808",
+      "src_port": 52100,
+      "dst_port": 443,
+      "protocol": 6,
+      "packet_length": 40,
+      "timestamp_ns": 1000000000
+    },
+    {
+      "packet": 2,
+      "classification": "HIT",
+      "hash_index": 40984,
+      "flow_key_hex": "c0a8010a08080808cb8401bb06",
+      "src_ip": "c0a8010a",
+      "dst_ip": "08080808",
+      "src_port": 52100,
+      "dst_port": 443,
+      "protocol": 6,
+      "packet_length": 60,
+      "timestamp_ns": 1000100000
+    },
+    {
+      "packet": 3,
+      "classification": "HIT",
+      "hash_index": 40984,
+      "flow_key_hex": "c0a8010a08080808cb8401bb06",
+      "src_ip": "c0a8010a",
+      "dst_ip": "08080808",
+      "src_port": 52100,
+      "dst_port": 443,
+      "protocol": 6,
+      "packet_length": 52,
+      "timestamp_ns": 1000500000
+    },
+    {
+      "packet": 4,
+      "classification": "MISS",
+      "hash_index": 12848,
+      "flow_key_hex": "c0a80114080804049c40003511",
+      "src_ip": "c0a80114",
+      "dst_ip": "08080404",
+      "src_port": 40000,
+      "dst_port": 53,
+      "protocol": 17,
+      "packet_length": 28,
+      "timestamp_ns": 2000000000
+    },
+    {
+      "packet": 5,
+      "classification": "HIT",
+      "hash_index": 12848,
+      "flow_key_hex": "c0a80114080804049c40003511",
+      "src_ip": "c0a80114",
+      "dst_ip": "08080404",
+      "src_port": 40000,
+      "dst_port": 53,
+      "protocol": 17,
+      "packet_length": 36,
+      "timestamp_ns": 2000200000
+    },
+    {
+      "packet": 6,
+      "classification": "MISS",
+      "hash_index": 7940,
+      "flow_key_hex": "0a0000010a0000023039005006",
+      "src_ip": "0a000001",
+      "dst_ip": "0a000002",
+      "src_port": 12345,
+      "dst_port": 80,
+      "protocol": 6,
+      "packet_length": 44,
+      "timestamp_ns": 3000000000
+    },
+    {
+      "packet": 7,
+      "classification": "HIT",
+      "hash_index": 7940,
+      "flow_key_hex": "0a0000010a0000023039005006",
+      "src_ip": "0a000001",
+      "dst_ip": "0a000002",
+      "src_port": 12345,
+      "dst_port": 80,
+      "protocol": 6,
+      "packet_length": 80,
+      "timestamp_ns": 3000900000
+    },
+    {
+      "packet": 8,
+      "classification": "MISS",
+      "hash_index": 39485,
+      "flow_key_hex": "ac10000aac1000141388138911",
+      "src_ip": "ac10000a",
+      "dst_ip": "ac100014",
+      "src_port": 5000,
+      "dst_port": 5001,
+      "protocol": 17,
+      "packet_length": 28,
+      "timestamp_ns": 4000000000
+    },
+    {
+      "packet": 9,
+      "classification": "DROP"
+    },
+    {
+      "packet": 10,
+      "classification": "DROP"
+    },
+    {
+      "packet": 11,
+      "classification": "DROP"
+    },
+    {
+      "packet": 12,
+      "classification": "DROP"
+    },
+    {
+      "packet": 13,
+      "classification": "DROP"
+    },
+    {
+      "packet": 14,
+      "classification": "DROP"
+    }
+  ],
+  "features": [
+    {
+      "hash_index": 7940,
+      "flow_key": 792281630049477301948318240774,
+      "src_ip": "0a000001",
+      "dst_ip": "0a000002",
+      "src_port": 12345,
+      "dst_port": 80,
+      "protocol": 6,
+      "packet_count": 2,
+      "byte_count": 124,
+      "first_timestamp": 3000000000,
+      "last_timestamp": 3000900000,
+      "duration": 900000,
+      "feature_vector_hex": "0a0000010a0000023039005006000000020000007c000000000000000dbba0"
+    },
+    {
+      "hash_index": 12848,
+      "flow_key": 15263801987910039605839302505745,
+      "src_ip": "c0a80114",
+      "dst_ip": "08080404",
+      "src_port": 40000,
+      "dst_port": 53,
+      "protocol": 17,
+      "packet_count": 2,
+      "byte_count": 64,
+      "first_timestamp": 2000000000,
+      "last_timestamp": 2000200000,
+      "duration": 200000,
+      "feature_vector_hex": "c0a80114080804049c40003511000000020000004000000000000000030d40"
+    },
+    {
+      "hash_index": 39485,
+      "flow_key": 13632195763008265340142377732369,
+      "src_ip": "ac10000a",
+      "dst_ip": "ac100014",
+      "src_port": 5000,
+      "dst_port": 5001,
+      "protocol": 17,
+      "packet_count": 1,
+      "byte_count": 28,
+      "first_timestamp": 4000000000,
+      "last_timestamp": 4000000000,
+      "duration": 0,
+      "feature_vector_hex": "ac10000aac1000141388138911000000010000001c00000000000000000000"
+    },
+    {
+      "hash_index": 40984,
+      "flow_key": 15263801940686375907643808135942,
+      "src_ip": "c0a8010a",
+      "dst_ip": "08080808",
+      "src_port": 52100,
+      "dst_port": 443,
+      "protocol": 6,
+      "packet_count": 3,
+      "byte_count": 152,
+      "first_timestamp": 1000000000,
+      "last_timestamp": 1000500000,
+      "duration": 500000,
+      "feature_vector_hex": "c0a8010a08080808cb8401bb0600000003000000980000000000000007a120"
+    }
+  ]
+}

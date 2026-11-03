@@ -1,0 +1,186 @@
+{
+  "pcap": "trafego_referencia_P01_P14.pcap",
+  "format": "PCAP classic little-endian, Ethernet II, microsecond timestamps",
+  "timestamp_contract": "80-bit unsigned scalar nanoseconds",
+  "packet_cases": [
+    {
+      "packet_id": "P01",
+      "frame_bytes": 54,
+      "timestamp_ns": 1000000000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "TCP F1, início"
+    },
+    {
+      "packet_id": "P02",
+      "frame_bytes": 74,
+      "timestamp_ns": 1000100000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "TCP F1, segundo pacote"
+    },
+    {
+      "packet_id": "P03",
+      "frame_bytes": 66,
+      "timestamp_ns": 1000500000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "TCP F1, terceiro pacote"
+    },
+    {
+      "packet_id": "P04",
+      "frame_bytes": 42,
+      "timestamp_ns": 2000000000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "UDP F2, início"
+    },
+    {
+      "packet_id": "P05",
+      "frame_bytes": 50,
+      "timestamp_ns": 2000200000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "UDP F2, segundo pacote"
+    },
+    {
+      "packet_id": "P06",
+      "frame_bytes": 58,
+      "timestamp_ns": 3000000000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "TCP F3, IHL=6"
+    },
+    {
+      "packet_id": "P07",
+      "frame_bytes": 94,
+      "timestamp_ns": 3000900000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "TCP F3, IHL=15"
+    },
+    {
+      "packet_id": "P08",
+      "frame_bytes": 42,
+      "timestamp_ns": 4000000000,
+      "expected_valid": true,
+      "tuser_on_tlast": 1,
+      "scenario": "UDP F4, pacote único"
+    },
+    {
+      "packet_id": "P09",
+      "frame_bytes": 42,
+      "timestamp_ns": 5000000000,
+      "expected_valid": false,
+      "tuser_on_tlast": 1,
+      "scenario": "Protocolo IPv4 não suportado"
+    },
+    {
+      "packet_id": "P10",
+      "frame_bytes": 62,
+      "timestamp_ns": 5100000000,
+      "expected_valid": false,
+      "tuser_on_tlast": 1,
+      "scenario": "EtherType não IPv4"
+    },
+    {
+      "packet_id": "P11",
+      "frame_bytes": 54,
+      "timestamp_ns": 5200000000,
+      "expected_valid": false,
+      "tuser_on_tlast": 1,
+      "scenario": "IPv4 fragmentado (MF=1)"
+    },
+    {
+      "packet_id": "P12",
+      "frame_bytes": 54,
+      "timestamp_ns": 5300000000,
+      "expected_valid": false,
+      "tuser_on_tlast": 0,
+      "scenario": "TUSER=0 no TLAST"
+    },
+    {
+      "packet_id": "P13",
+      "frame_bytes": 54,
+      "timestamp_ns": 5400000000,
+      "expected_valid": false,
+      "tuser_on_tlast": 1,
+      "scenario": "IHL=4 inválido"
+    },
+    {
+      "packet_id": "P14",
+      "frame_bytes": 32,
+      "timestamp_ns": 5500000000,
+      "expected_valid": false,
+      "tuser_on_tlast": 1,
+      "scenario": "TLAST antecipado / quadro truncado"
+    }
+  ],
+  "feature_reference": {
+    "accepted_packets": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P05",
+      "P06",
+      "P07",
+      "P08"
+    ],
+    "dropped_packets": [
+      "P09",
+      "P10",
+      "P11",
+      "P12",
+      "P13",
+      "P14"
+    ],
+    "classification_counts": {
+      "MISS": 4,
+      "HIT": 4,
+      "COLLISION": 0
+    },
+    "flows": [
+      {
+        "hash_index": 7940,
+        "flow_key": 792281630049477301948318240774,
+        "packet_count": 2,
+        "byte_count": 124,
+        "first_timestamp": 3000000000,
+        "last_timestamp": 3000900000,
+        "duration": 900000,
+        "feature_vector_hex": "0a0000010a0000023039005006000000020000007c000000000000000dbba0"
+      },
+      {
+        "hash_index": 12848,
+        "flow_key": 15263801987910039605839302505745,
+        "packet_count": 2,
+        "byte_count": 64,
+        "first_timestamp": 2000000000,
+        "last_timestamp": 2000200000,
+        "duration": 200000,
+        "feature_vector_hex": "c0a80114080804049c40003511000000020000004000000000000000030d40"
+      },
+      {
+        "hash_index": 39485,
+        "flow_key": 13632195763008265340142377732369,
+        "packet_count": 1,
+        "byte_count": 28,
+        "first_timestamp": 4000000000,
+        "last_timestamp": 4000000000,
+        "duration": 0,
+        "feature_vector_hex": "ac10000aac1000141388138911000000010000001c00000000000000000000"
+      },
+      {
+        "hash_index": 40984,
+        "flow_key": 15263801940686375907643808135942,
+        "packet_count": 3,
+        "byte_count": 152,
+        "first_timestamp": 1000000000,
+        "last_timestamp": 1000500000,
+        "duration": 500000,
+        "feature_vector_hex": "c0a8010a08080808cb8401bb0600000003000000980000000000000007a120"
+      }
+    ]
+  }
+}

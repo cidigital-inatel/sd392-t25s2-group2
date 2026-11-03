@@ -1,0 +1,24 @@
+Verificacao Python executada localmente
+
+PCAP: trafego_referencia_P01_P14.pcap
+Registros: 14
+Metadados validos: 8
+Descartados: 6
+MISS: 4
+HIT: 4
+COLLISION: 0
+Features: 4
+
+Ordem de varredura (hash_index crescente):
+index=7940  packet_count=2 byte_count=124 duration=900000 ns
+index=12848 packet_count=2 byte_count=64 duration=200000 ns
+index=39485 packet_count=1 byte_count=28 duration=0 ns
+index=40984 packet_count=3 byte_count=152 duration=500000 ns
+
+Tambem foram verificados:
+- os 14 registros PCAP foram relidos do arquivo binario;
+- cada quadro foi reconstruido sem perda com o mapeamento TDATA MSB-first e TKEEP MSB-aligned;
+- o resultado dos quatro feature_vector_hex coincide entre o gerador e o modelo independente;
+- os scripts Python passaram em py_compile.
+
+A compilacao/simulacao HDL nao foi executada neste ambiente, pois nao ha Vivado/XSim/ModelSim/Questa/iverilog/verilator instalado.
