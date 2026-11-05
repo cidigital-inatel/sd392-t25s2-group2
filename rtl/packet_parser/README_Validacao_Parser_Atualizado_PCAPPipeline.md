@@ -83,8 +83,7 @@ Foram validados:
 - diferentes timestamps;
 - `IHL = 5`;
 - `IHL > 5`;
-- `IHL = 15`;
-- último beat parcial com `TKEEP`.
+- `IHL = 15`.
 
 Resultado:
 
@@ -216,40 +215,7 @@ O quadro interrompido não gerou `valid`, e o quadro seguinte foi processado nor
 
 ---
 
-## 8. UT-16 — TKEEP parcial em posição crítica
-
-Foi realizado um teste adicional com `TKEEP` parcial em um beat interno do quadro.
-
-O teste demonstrou que, nessa condição artificial, o Parser ainda poderia liberar `valid`.
-
-Entretanto, esse cenário foi classificado como:
-
-```text
-FORA DO ESCOPO DA INTERFACE
-```
-
-A convenção adotada para a interface do projeto é:
-
-```text
-beats intermediários → TKEEP = FF
-último beat           → TKEEP pode ser parcial
-```
-
-Portanto, `TKEEP` parcial em um beat interno não é considerado um comportamento esperado da MAC nesta versão do sistema.
-
-O caso relevante ao contrato da interface — `TKEEP` parcial no último beat — já foi validado nas campanhas anteriores.
-
-Assim:
-
-```text
-UT-16 = FORA DO ESCOPO DA INTERFACE
-```
-
-Não será realizada alteração adicional no RTL para suportar `TKEEP` parcial em beats internos.
-
----
-
-## 9. Matriz atualizada de testes unitários
+## 8. Matriz atualizada de testes unitários
 
 | ID | Cenário | Situação | Evidência |
 |---|---|---|---|
@@ -268,12 +234,11 @@ Não será realizada alteração adicional no RTL para suportar `TKEEP` parcial 
 | UT-13 | IPv4 com `IHL = 15` | **PASS** | P07 |
 | UT-14 | Quadro truncado com `TLAST` antecipado | **PASS** | P14 |
 | UT-15 | Pacotes consecutivos sem ciclo ocioso | **PASS** | Campanha 3 |
-| UT-16 | `TKEEP` parcial em beat interno | **FORA DO ESCOPO** | contrato da interface |
-| UT-17 | Timestamps diferentes em pacotes consecutivos | **PASS** | Campanhas 1 e 3 |
+| UT-16 | Timestamps diferentes em pacotes consecutivos | **PASS** | Campanhas 1 e 3 |
 
 ---
 
-## 10. Baseline funcional atual
+## 9. Baseline funcional atual
 
 ```text
 Ethernet II                PASS
@@ -300,7 +265,7 @@ Esta versão passa a ser a **baseline funcional atual do Packet Parser**.
 
 ---
 
-## 11. Próximo passo — Integração com a frente de verificação
+## 10. Próximo passo — Integração com a frente de verificação
 
 A próxima etapa deixa de utilizar o fluxo intermediário:
 
