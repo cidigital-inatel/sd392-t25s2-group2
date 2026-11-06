@@ -1,5 +1,5 @@
 // VERSÃO 5 - alterado:
-//Timestamp com novo formato (segundos e nanossegundos)
+// Timestamp com novo formato (segundos e nanossegundos)
 
 module flow_finalizer_v5 (
     input  logic         clk,
