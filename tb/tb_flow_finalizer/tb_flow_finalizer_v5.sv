@@ -1,5 +1,6 @@
 // VERSÃO 5
 // Adicionados conversões e simulações para mostragem de tempo "real" na simulação
+// Timestamp com novo formato (segundos e nanossegundos)
 
 `timescale 1ns/1ps
 
@@ -53,6 +54,16 @@ module tb_flow_finalizer_v5;
         end
     endfunction
 
+    // Monta o timestamp: [79:32] segundos e [31:0] nanossegundos.
+    function automatic logic [79:0] montar_timestamp(
+        input longint signed segundos,
+        input logic [31:0] nanossegundos
+    );
+        begin
+            montar_timestamp = {segundos[47:0], nanossegundos};
+        end
+    endfunction
+
     // Convesão para ano/mês/dia/hora
     function automatic string data_hora_unix(input logic [79:0] timestamp);
         longint signed segundos_locais;
@@ -72,7 +83,7 @@ module tb_flow_finalizer_v5;
         integer segundo;
         begin
             // Subtraindo 3 horas para exibir no fuso-horario de Brasilia.
-            segundos_locais = $signed(timestamp[63:0]) - 10800;
+            segundos_locais = $signed({16'b0, timestamp[79:32]}) - 10800;
             dias = segundos_locais / 86400;
             segundos_do_dia = segundos_locais % 86400;
 
@@ -118,7 +129,8 @@ module tb_flow_finalizer_v5;
         begin
             $display("%s: %s (horario de Brasilia)",
                      descricao, data_hora_unix(timestamp));
-            $display("%s Tempo (segundos): %0d", descricao, timestamp);
+            $display("%s Tempo (segundos): %0d", descricao, timestamp[79:32]);
+            $display("%s Nanossegundos: %0d", descricao, timestamp[31:0]);
         end
     endtask
 
@@ -159,11 +171,13 @@ module tb_flow_finalizer_v5;
             $display("Chave   : %h", feature_vector[247:144]);
             $display("Pacotes : %0d", feature_vector[143:112]);
             $display("Bytes   : %0d", feature_vector[111:80]);
-            $display("Duracao : %0d segundos", feature_vector[79:0]);
-            $display("Duracao : %s:%s:%s (HH:MM:SS)",
-                     dois_digitos(feature_vector[79:0] / 3600),
-                     dois_digitos((feature_vector[79:0] % 3600) / 60),
-                     dois_digitos(feature_vector[79:0] % 60));
+            $display("Duracao : %0d segundos e %0d nanossegundos",
+                     feature_vector[79:32], feature_vector[31:0]);
+            $display("Duracao : %s:%s:%s.%02d (HH:MM:SS.nn)",
+					 dois_digitos(feature_vector[79:32] / 3600),
+					 dois_digitos((feature_vector[79:32] % 3600) / 60),
+					 dois_digitos(feature_vector[79:32] % 60),
+					 feature_vector[31:0]);
 
             if (teste_deve_passar) begin
                 if (resultado_correto) begin
@@ -221,24 +235,24 @@ module tb_flow_finalizer_v5;
         inicio_ontem_utc = inicio_hoje_utc - 86400;
 
         // Para usar horario ao longo do dia anterior ao dia atual do computador.
-        ts_inicial_1 = inicio_ontem_utc + 8*3600;
-        ts_final_1   = ts_inicial_1 + 50;
+        ts_inicial_1 = montar_timestamp(inicio_ontem_utc + 8*3600, 32'd0);
+        ts_final_1   = montar_timestamp(ts_inicial_1[79:32] + 30, 32'd15);
 
         // Para usar horario ao longo do dia anterior ao dia atual do computador.
-		ts_inicial_2 = inicio_ontem_utc + 14*3600;
-        ts_final_2   = ts_inicial_2 + 150;
+		ts_inicial_2 = montar_timestamp(inicio_ontem_utc + 14*3600, 32'd0);
+        ts_final_2   = montar_timestamp(inicio_ontem_utc + 14*3600 + 150, 32'd0);
 
 		// Para usar horario ao longo do dia atual com horario menor ao atual do computador.
-        ts_inicial_3 = inicio_hoje_utc + segundos_desde_meia_noite/3;
-        ts_final_3   = ts_inicial_3 + 100;
+        ts_inicial_3 = montar_timestamp(inicio_hoje_utc + segundos_desde_meia_noite/3, 32'd0);
+        ts_final_3   = montar_timestamp(inicio_hoje_utc + segundos_desde_meia_noite/3 + 100, 32'd0);
 
         // Para usar horario ao longo do dia atual com horario menor ao atual do computador.
-		ts_final_4   = inicio_hoje_utc + (segundos_desde_meia_noite*2)/3;
-        ts_inicial_4 = ts_final_4 - 50;
+		ts_final_4   = montar_timestamp(inicio_hoje_utc + (segundos_desde_meia_noite*2)/3, 32'd0);
+        ts_inicial_4 = montar_timestamp(inicio_hoje_utc + (segundos_desde_meia_noite*2)/3 - 50, 32'd0);
 
         // O ultimo teste para terminar no horario atual da simulacao no Model Sim
-        ts_final_5   = agora_unix;
-        ts_inicial_5 = agora_unix - 100;
+        ts_final_5   = montar_timestamp(agora_unix, 32'd0);
+        ts_inicial_5 = montar_timestamp(agora_unix - 100, 32'd0);
 
 
         rst = 1'b1;
@@ -268,7 +282,7 @@ module tb_flow_finalizer_v5;
             {16'b0, ts_final_1, 16'b0, ts_inicial_1, 32'd1200, 32'd3,
              24'b0, 104'h123456789ABCDEF00112233445},
              104'h123456789ABCDEF00112233445,
-             32'd3, 32'd1200, 80'd50, 1'b1
+             32'd3, 32'd1200, {48'd30, 32'd15}, 1'b1
         );
 
         // Teste 2: duracao esperada incorreta
@@ -277,7 +291,7 @@ module tb_flow_finalizer_v5;
             {16'b0, ts_final_2, 16'b0, ts_inicial_2, 32'd800, 32'd4,
              24'b0, 104'h11112222333344445555666677},
              104'h11112222333344445555666677,
-             32'd4, 32'd800, 80'd100, 1'b0
+             32'd4, 32'd800, {48'd100, 32'd00}, 1'b0
         );
 
         // Teste 3: segundo registro valido
@@ -286,7 +300,7 @@ module tb_flow_finalizer_v5;
             {16'b0, ts_final_3, 16'b0, ts_inicial_3, 32'd2000, 32'd5,
              24'b0, 104'hABCDEF1234567890ABCDEF1234},
              104'hABCDEF1234567890ABCDEF1234,
-             32'd5, 32'd2000, 80'd100, 1'b1
+             32'd5, 32'd2000, {48'd100, 32'd00}, 1'b1
         );
 
         // Teste 4: quantidade de bytes esperada incorreta
@@ -295,7 +309,7 @@ module tb_flow_finalizer_v5;
             {16'b0, ts_final_4, 16'b0, ts_inicial_4, 32'd500, 32'd2,
              24'b0, 104'h55556666777788889999AAAABB},
              104'h55556666777788889999AAAABB,
-             32'd2, 32'd1200, 80'd50, 1'b0
+             32'd2, 32'd1200, {48'd50, 32'd00}, 1'b0
         );
 
         // Teste 5: chave esperada incorreta
@@ -305,7 +319,7 @@ module tb_flow_finalizer_v5;
             {16'b0, ts_final_5, 16'b0, ts_inicial_5, 32'd1000, 32'd6,
              24'b0, 104'h123456789ABCDEF00112233445},
              104'hFFFFFFFFFFFFFFFFFFFFFFFFFF,
-             32'd6, 32'd1000, 80'd100, 1'b0
+             32'd6, 32'd1000, {48'd100, 32'd00}, 1'b0
         );
 
         $display("");
