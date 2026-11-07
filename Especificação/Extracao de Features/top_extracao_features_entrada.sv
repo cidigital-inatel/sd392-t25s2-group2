@@ -70,24 +70,24 @@ module top_extracao_features_com_entrada #(
     // =========================================================
 
     fiu_hash_top u_fiu_hash_top (
-        .clk              (clk),
-        .reset_n          (reset_n),
+    .clk              (clk),
+    .reset             (rst),
 
-        .src_ip_in        (src_ip_in),
-        .dst_ip_in        (dst_ip_in),
-        .src_port_in      (src_port_in),
-        .dst_port_in      (dst_port_in),
-        .protocol_in      (protocol_in),
-        .packet_length_in (packet_length_in),
-        .timestamp_in     (timestamp_in),
-        .in_valid         (in_valid),
+    .src_ip_in        (src_ip_in),
+    .dst_ip_in        (dst_ip_in),
+    .src_port_in      (src_port_in),
+    .dst_port_in      (dst_port_in),
+    .protocol_in      (protocol_in),
+    .packet_length_in (packet_length_in),
+    .timestamp_in     (timestamp_in),
+    .in_valid         (in_valid),
 
-        .hash_index       (hash_index),
-        .flow_key         (flow_key),
-        .packet_length    (packet_length),
-        .timestamp        (timestamp),
-        .hash_valid       (hash_valid)
-    );
+    .hash_index       (hash_index),
+    .flow_key         (flow_key),
+    .packet_length    (packet_length),
+    .timestamp        (timestamp),
+    .hash_valid       (hash_valid)
+);
 
     // =========================================================
     // 2. Controller

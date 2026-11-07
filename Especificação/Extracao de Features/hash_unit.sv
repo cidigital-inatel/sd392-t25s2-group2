@@ -4,13 +4,14 @@
 // Samuel - Hash Unit: valid -> captura atomica -> start registrado -> FSM.
 // CRC-16/CCITT-FALSE: poly=1021, init=FFFF, refin/refout=0, xorout=0000.
 // Chave de 13 bytes, MSB primeiro. Um registro por vez, sem FIFO.
-// Reset SINCRONO ativo baixo. start e capture_allowed sao sinais INTERNOS.
+// Reset ASSINCRONO ativo alto. start e capture_allowed sao sinais INTERNOS.
+// timestamp_in[79:32] = segundos; [31:0] = nanossegundos (passagem integral).
 // Semana 6: uma captura por periodo alto de valid; rearmar somente apos baixo.
 // Novas transferencias separadas por pelo menos 16 clocks, sem FIFO.
 // out_valid dura um ciclo; o consumidor captura na borda em que o observa alto.
 module hash_unit (
     input  wire logic         clk,
-    input  wire logic         reset_n,
+    input  wire logic         reset,
     input  wire logic [103:0] flow_key_in,
     input  wire logic [15:0]  packet_length_in,
     input  wire logic [79:0]  timestamp_in,
@@ -63,8 +64,8 @@ module hash_unit (
 
     // Recepcao: preserva juntos os 200 bits e produz start por um ciclo.
     // !start impede sobrescrever a captura enquanto a FSM ainda esta em IDLE.
-    always_ff @(posedge clk) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk or posedge reset) begin
+        if (reset) begin
             key_reg       <= '0;
             length_reg    <= '0;
             timestamp_reg <= '0;
@@ -89,8 +90,8 @@ module hash_unit (
     end
 
     // A FSM usa start da borda ANTERIOR: os dados ja estao capturados.
-    always_ff @(posedge clk) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk or posedge reset) begin
+        if (reset) begin
             state      <= IDLE;
             crc_reg    <= 16'hFFFF;
             result_reg <= '0;
@@ -132,7 +133,7 @@ module hash_unit (
     // synthesis translate_off
 `ifndef SYNTHESIS
     always @(posedge clk) begin
-        if (reset_n && in_valid && !valid_seen && !capture_allowed)
+        if (!reset && in_valid && !valid_seen && !capture_allowed)
             $fatal(1, "PROTOCOL_VIOLATION: HASH recebeu nova transferencia ocupado; intervalo minimo de 16 clocks.");
     end
 `endif

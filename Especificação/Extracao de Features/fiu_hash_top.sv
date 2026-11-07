@@ -5,7 +5,7 @@
 // alimentam diretamente as quatro entradas de dados/validade do Hash.
 module fiu_hash_top (
     input wire logic clk,
-    input wire logic reset_n,
+    input wire logic reset,
     input wire logic [31:0] src_ip_in,
     input wire logic [31:0] dst_ip_in,
     input wire logic [15:0] src_port_in,
@@ -26,14 +26,14 @@ module fiu_hash_top (
     wire fiu_valid;
 
     flow_identification_unit u_fiu (
-        .clk, .reset_n,
+        .clk, .reset,
         .src_ip_in, .dst_ip_in, .src_port_in, .dst_port_in, .protocol_in,
         .packet_length_in, .timestamp_in, .in_valid,
         .flow_key_out(fiu_flow_key), .packet_length_out(fiu_packet_length),
         .timestamp_out(fiu_timestamp), .out_valid(fiu_valid)
     );
     hash_unit u_hash (
-        .clk, .reset_n, .flow_key_in(fiu_flow_key),
+        .clk, .reset, .flow_key_in(fiu_flow_key),
         .packet_length_in(fiu_packet_length), .timestamp_in(fiu_timestamp),
         .in_valid(fiu_valid), .hash_index_out(hash_index),
         .flow_key_out(flow_key), .packet_length_out(packet_length),

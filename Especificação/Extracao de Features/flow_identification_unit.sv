@@ -3,10 +3,11 @@
 
 // FIU da Semana 6, baseada na interface de dados do pacote publico de Bruno.
 // Recepcao unica por periodo alto de valid -> captura -> start -> publicacao.
-// Um registro local, sem FIFO ou ready. Reset sincrono ativo baixo.
+// Um registro local, sem FIFO ou ready. Reset assincrono ativo alto.
+// timestamp_in[79:32] = segundos; [31:0] = nanossegundos (passagem integral).
 module flow_identification_unit (
     input wire logic         clk,
-    input wire logic         reset_n,
+    input wire logic         reset,
     input wire logic [31:0]  src_ip_in,
     input wire logic [31:0]  dst_ip_in,
     input wire logic [15:0]  src_port_in,
@@ -32,8 +33,8 @@ module flow_identification_unit (
 
     assign capture_allowed = (state == IDLE) && !start;
 
-    always_ff @(posedge clk) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk or posedge reset) begin
+        if (reset) begin
             src_ip_reg    <= '0;
             dst_ip_reg    <= '0;
             src_port_reg  <= '0;
@@ -62,8 +63,8 @@ module flow_identification_unit (
         end
     end
 
-    always_ff @(posedge clk) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk or posedge reset) begin
+        if (reset) begin
             state             <= IDLE;
             flow_key_out      <= '0;
             packet_length_out <= '0;
@@ -91,7 +92,7 @@ module flow_identification_unit (
     // synthesis translate_off
 `ifndef SYNTHESIS
     always @(posedge clk) begin
-        if (reset_n && in_valid && !valid_seen && !capture_allowed)
+        if (!reset && in_valid && !valid_seen && !capture_allowed)
             $fatal(1, "PROTOCOL_VIOLATION: FIU recebeu nova transferencia ocupado; intervalo local minimo de 3 clocks.");
     end
 `endif
