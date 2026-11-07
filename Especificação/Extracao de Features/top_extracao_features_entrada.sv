@@ -149,14 +149,14 @@ module top_extracao_features_com_entrada #(
     // 4. Finalização e geração do vetor de features
     // =========================================================
 
-    flow_finalizer_v3 u_finalizer (
-        .clk            (clk),
-        .rst            (rst),
-        .fin_valid      (fin_valid),
-        .flow_entry     (flow_entry),
-        .feature_vector (feature_vector),
-        .fin_done       (fin_done)
-    );
+   flow_finalizer_v5 u_finalizer (
+    .clk            (clk),
+    .rst            (rst),
+    .fin_valid      (fin_valid),
+    .flow_entry     (flow_entry),
+    .feature_vector (feature_vector),
+    .fin_done       (fin_done)
+);
 
 endmodule
 

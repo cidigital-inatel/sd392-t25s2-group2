@@ -1,13 +1,7 @@
-// VERSÃO 4 - alterado:
-//Campo	    Largura
-//Chave	    104 bits
-//Pacotes	32 bits
-//Bytes	    32 bits
-//Duração	80 bits
-//Total	    248 bits
+// VERSÃO 5 - alterado:
+// Timestamp com novo formato (segundos e nanossegundos)
 
-
-module flow_finalizer_v3 (
+module flow_finalizer_v5 (
     input  logic         clk,
     input  logic         rst,
 
@@ -29,13 +23,19 @@ module flow_finalizer_v3 (
     logic [79:0] last_timestamp;
     logic [79:0] duration;
 
+    logic [47:0] first_seconds;
+    logic [47:0] last_seconds;
+    logic [31:0] first_nanoseconds;
+    logic [31:0] last_nanoseconds;
+    logic [47:0] duration_seconds;
+    logic [31:0] duration_nanoseconds;
+
     // Controle de recebimento
     logic fin_seen;
 
-    // --------------------------------------------------------
-    // Extração dos campos do registro recebido e depois junção
-	// na ordem redefinida
-    // --------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------
+    // Extração dos campos do registro recebido e depois junção na ordem redefinida já com timestamp redesenhado
+    // ---------------------------------------------------------------------------------------------------------
 
     always_comb begin
         // Chave do fluxo: 104 bits
@@ -48,8 +48,22 @@ module flow_finalizer_v3 (
         first_timestamp = flow_entry[271:192];
         // Timestamp final: 80 bits
         last_timestamp = flow_entry[367:288];
-        // Duracao: timestamp final - inicial
-        duration = last_timestamp - first_timestamp;
+        // Timestamp: [79:32] segundos e [31:0] nanossegundos
+        first_seconds     = first_timestamp[79:32];
+        first_nanoseconds = first_timestamp[31:0];
+        last_seconds      = last_timestamp[79:32];
+        last_nanoseconds  = last_timestamp[31:0];
+
+        // Calculo da duração com segundos e nanossegundos
+        if (last_nanoseconds >= first_nanoseconds) begin
+            duration_seconds      = last_seconds - first_seconds;
+            duration_nanoseconds = last_nanoseconds - first_nanoseconds;
+        end else begin
+            duration_seconds      = last_seconds - first_seconds - 1'b1;
+            duration_nanoseconds = 32'd1000000000 + last_nanoseconds - first_nanoseconds;
+        end
+
+        duration = {duration_seconds, duration_nanoseconds};
     end
 
     // ------------------------------------------------

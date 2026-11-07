@@ -14,7 +14,7 @@ Compiling module xil_defaultlib.hash_unit
 Compiling module xil_defaultlib.fiu_hash_top
 Compiling module xil_defaultlib.controller
 Compiling module xil_defaultlib.flow_table(DEPTH=1048576)
-Compiling module xil_defaultlib.flow_finalizer_v3
+Compiling module xil_defaultlib.flow_finalizer_v5
 Compiling module xil_defaultlib.top_extracao_features_com_entrad...
 Compiling module xil_defaultlib.tb_top_extracao_features_com_ent...
 Compiling module xil_defaultlib.glbl
