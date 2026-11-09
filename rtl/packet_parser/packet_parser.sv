@@ -1,12 +1,38 @@
 `timescale 1ns/1ps
 `default_nettype none
 
+// ============================================================================
+// Packet Parser
+// Projeto CI Digital
+//
+// Função:
+//   Extrair metadados de quadros Ethernet II contendo IPv4 + TCP/UDP.
+//
+// Interface de entrada:
+//   - TDATA  : 64 bits
+//   - TKEEP  : 1 bit por byte de TDATA
+//   - TVALID : indica beat válido
+//   - TLAST  : indica último beat do quadro
+//   - TUSER  : validade do quadro no último beat
+//   - timestamp_in : timestamp associado ao pacote
+//
+// Convenção de bytes:
+//   byte 0 do stream -> TDATA[7:0]
+//   byte 1           -> TDATA[15:8]
+//   ...
+//   byte 7           -> TDATA[63:56]
+//
+// L3_OFFSET:
+//   14 -> Ethernet II (modo principal do projeto)
+//    4 -> DLT_NULL/loopback, mantido apenas para compatibilidade de testes
+//
+// Observação:
+//   O Parser não interpreta o formato interno de timestamp_in. O valor é
+//   capturado no início do pacote e repassado integralmente na saída.
+// ============================================================================
+
 module packet_parser #(
     parameter int TS_WIDTH  = 80,
-
-    // Offset, em bytes, entre o início do stream e o início do IPv4.
-    // 14 -> Ethernet II normal.
-    // 4  -> PCAP DLT_NULL usado temporariamente pela frente de verificação.
     parameter int L3_OFFSET = 14
 ) (
     input  wire                  clk,
@@ -17,10 +43,6 @@ module packet_parser #(
     input  wire                  TVALID,
     input  wire                  TLAST,
     input  wire                  TUSER,
-
-    // IEEE 1588 ToD:
-    // [79:32] = segundos
-    // [31:0]  = nanossegundos
     input  wire [TS_WIDTH-1:0]   timestamp_in,
 
     output logic [31:0]          src_ip,
@@ -32,15 +54,6 @@ module packet_parser #(
     output logic [TS_WIDTH-1:0]  timestamp,
     output logic                 valid
 );
-
-    // Convenção alinhada à frente de verificação:
-    // 1º byte do stream -> TDATA[7:0]
-    // 2º byte           -> TDATA[15:8]
-    // ...
-    // TKEEP[0] -> TDATA[7:0]
-    // TKEEP[7] -> TDATA[63:56]
-    //
-    // Reset permanece síncrono, ativo em nível alto.
 
     typedef enum logic [3:0] {
         IDLE,
@@ -68,6 +81,9 @@ module packet_parser #(
     integer abs_off;
     logic [7:0] byte_value;
 
+    // Conta os bytes válidos do beat.
+    // Contrato do projeto: beats intermediários usam TKEEP=8'hFF;
+    // TKEEP parcial é esperado apenas no último beat.
     function automatic integer count_keep(input logic [7:0] keep);
         integer k;
         begin
@@ -77,6 +93,7 @@ module packet_parser #(
         end
     endfunction
 
+    // Reset síncrono, ativo em nível alto.
     always_ff @(posedge clk) begin
         if (reset) begin
             state            <= IDLE;
@@ -88,17 +105,21 @@ module packet_parser #(
             packet_length    <= '0;
             timestamp        <= '0;
             valid            <= 1'b0;
+
             ethertype        <= '0;
             ip_version       <= '0;
             ihl              <= '0;
             transport_offset <= '0;
             byte_offset      <= '0;
             drop_packet      <= 1'b0;
+
         end else begin
+            // valid é um pulso de um ciclo.
             valid <= 1'b0;
 
             if (TVALID) begin
 
+                // Início de um novo pacote.
                 if (state == IDLE) begin
                     src_ip           <= '0;
                     dst_ip           <= '0;
@@ -107,6 +128,7 @@ module packet_parser #(
                     protocol         <= '0;
                     packet_length    <= '0;
                     timestamp        <= timestamp_in;
+
                     ethertype        <= '0;
                     ip_version       <= '0;
                     ihl              <= '0;
@@ -122,13 +144,15 @@ module packet_parser #(
 
                 valid_bytes = count_keep(TKEEP);
 
+                // Parsing byte a byte do beat atual.
                 for (i = 0; i < 8; i = i + 1) begin
                     if (TKEEP[i]) begin
-
                         byte_value = TDATA[(8*i) +: 8];
                         abs_off    = byte_offset + i;
 
-                        // Ethernet II somente no modo L3_OFFSET=14.
+                        // ----------------------------------------------------
+                        // Ethernet II
+                        // ----------------------------------------------------
                         if (L3_OFFSET == 14) begin
                             case (abs_off)
                                 12: begin
@@ -148,7 +172,9 @@ module packet_parser #(
                             endcase
                         end
 
-                        // IPv4: offsets relativos ao início do L3.
+                        // ----------------------------------------------------
+                        // IPv4
+                        // ----------------------------------------------------
                         if (abs_off == L3_OFFSET) begin
                             ip_version <= byte_value[7:4];
                             ihl        <= byte_value[3:0];
@@ -161,13 +187,15 @@ module packet_parser #(
                                 drop_packet <= 1'b1;
                         end
 
+                        // IPv4 Total Length
                         if (abs_off == (L3_OFFSET + 2))
                             packet_length[15:8] <= byte_value;
 
                         if (abs_off == (L3_OFFSET + 3))
                             packet_length[7:0] <= byte_value;
 
-                        // Flags + Fragment Offset
+                        // Flags + Fragment Offset:
+                        // descarta MF=1 ou fragment offset != 0.
                         if (abs_off == (L3_OFFSET + 6)) begin
                             if (byte_value[5] ||
                                 (byte_value[4:0] != 5'b0))
@@ -179,7 +207,7 @@ module packet_parser #(
                                 drop_packet <= 1'b1;
                         end
 
-                        // Protocol
+                        // IPv4 Protocol
                         if (abs_off == (L3_OFFSET + 9)) begin
                             protocol <= byte_value;
 
@@ -188,7 +216,7 @@ module packet_parser #(
                                 drop_packet <= 1'b1;
                         end
 
-                        // Source IP
+                        // Source IPv4
                         if (abs_off == (L3_OFFSET + 12))
                             src_ip[31:24] <= byte_value;
                         if (abs_off == (L3_OFFSET + 13))
@@ -198,7 +226,7 @@ module packet_parser #(
                         if (abs_off == (L3_OFFSET + 15))
                             src_ip[7:0] <= byte_value;
 
-                        // Destination IP
+                        // Destination IPv4
                         if (abs_off == (L3_OFFSET + 16))
                             dst_ip[31:24] <= byte_value;
                         if (abs_off == (L3_OFFSET + 17))
@@ -208,7 +236,10 @@ module packet_parser #(
                         if (abs_off == (L3_OFFSET + 19))
                             dst_ip[7:0] <= byte_value;
 
-                        // Portas TCP/UDP, localizadas dinamicamente pelo IHL.
+                        // ----------------------------------------------------
+                        // TCP / UDP
+                        // Portas são localizadas dinamicamente pelo IHL.
+                        // ----------------------------------------------------
                         if (transport_offset >= (L3_OFFSET + 20)) begin
                             if (abs_off == transport_offset)
                                 src_port[15:8] <= byte_value;
@@ -225,6 +256,7 @@ module packet_parser #(
                     end
                 end
 
+                // FSM de acompanhamento do parsing.
                 case (state)
                     IDLE: begin
                         if (L3_OFFSET == 14)
@@ -254,15 +286,24 @@ module packet_parser #(
                     UDP_STATE:  state <= WAIT_LAST;
                     WAIT_LAST:  state <= WAIT_LAST;
                     DROP_PROTO: state <= DROP_PROTO;
-                    default: ;
+
+                    default: state <= IDLE;
                 endcase
 
                 if (drop_packet)
                     state <= DROP_PROTO;
 
-                // No contrato adotado, TKEEP parcial só ocorre no último beat.
                 byte_offset <= byte_offset + valid_bytes;
 
+                // ------------------------------------------------------------
+                // Finalização direta no TLAST
+                // ------------------------------------------------------------
+                // Não há estados pós-TLAST: o Parser libera o próximo pacote
+                // no ciclo seguinte.
+                //
+                // A condição de completude exige que pelo menos os quatro
+                // bytes das portas TCP/UDP tenham sido recebidos.
+                // ------------------------------------------------------------
                 if (TLAST) begin
                     if (TUSER &&
                         !drop_packet &&
@@ -270,7 +311,10 @@ module packet_parser #(
                         ((L3_OFFSET != 14) || (ethertype == 16'h0800)) &&
                         (ip_version == 4'd4) &&
                         (ihl >= 4'd5) &&
-                        ((protocol == 8'd6) || (protocol == 8'd17))) begin
+                        ((protocol == 8'd6) || (protocol == 8'd17)) &&
+                        ((byte_offset + valid_bytes) >=
+                         (transport_offset + 4))) begin
+
                         valid <= 1'b1;
                     end else begin
                         valid <= 1'b0;
