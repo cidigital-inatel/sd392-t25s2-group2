@@ -47,19 +47,39 @@ O módulo topo é o `top_extracao_features_com_entrada`. Ele contém quatro bloc
 
 **Parâmetros do topo** (repassados ao Controller): `INVALIDATE_AFTER_SEND` (padrão 1) e `SCAN_ENTRIES` (padrão 65536).
 
-**Polaridade do reset.** A entrada externa do topo é `reset_n`, ativa em nível baixo. O topo realiza a conversão para o reset interno ativo em nível alto:
+**Reset do sistema.**
+
+O módulo topo recebe o sinal `rst`, utilizado como reset síncrono ativo em nível alto.
+
+O reset é distribuído aos módulos internos:
+
+- FIU + Hash Unit (`u_fiu_hash_top`), pela porta `.reset(rst)`;
+- Controller (`u_controller`), pela porta `.rst(rst)`;
+- Flow Table (`u_flow_table`), pela porta `.rst(rst)`;
+- Flow Finalizer (`u_finalizer`), pela porta `.rst(rst)`.
+
+O reset é aplicado na borda de subida do clock (`posedge clk`) quando `rst = 1`. Quando `rst = 0`, os módulos executam suas operações normalmente.
+
+A implementação síncrona deve utilizar blocos sequenciais com a seguinte estrutura:
 
 ```systemverilog
-logic rst;
-assign rst = ~reset_n;
+always_ff @(posedge clk) begin
+    if (rst) begin
+        // Inicialização dos registradores
+    end else begin
+        // Operação normal
+    end
+end
 ```
 
-O sinal `rst` é conectado aos módulos internos. O `fiu_hash_top` recebe a porta `.reset(rst)`, e não `.reset_n`. FIU e Hash Unit utilizam reset assíncrono ativo em nível alto. Controller, Flow Table e Finalizer também recebem reset ativo em nível alto, conforme suas interfaces.
+Não deve haver sensibilidade à borda do reset (`posedge rst` ou `negedge rst`) nos blocos sequenciais.
 
 ### 2.1. Entrada do topo
 
 | Sinal | Largura | Descrição |
 |---|---:|---|
+| `clk` | 1 bit | Clock principal do sistema |
+| `rst` | 1 bit | Reset síncrono ativo em nível alto |
 | `src_ip_in` | 32 bits | IP de origem |
 | `dst_ip_in` | 32 bits | IP de destino |
 | `src_port_in` | 16 bits | Porta de origem |
@@ -277,7 +297,7 @@ INICIANDO SEGUNDA VARREDURA
 PASSOU: segunda varredura sem features repetidas.
 
 ==================================================
-          RESULTADO FINAL DA INTEGRACAO
+         RESULTADO FINAL DA INTEGRACAO
 ==================================================
 Pacotes enviados:       181
 MISS:                   179
@@ -385,7 +405,7 @@ Dois cuidados ficam registrados:
 
 ### Contrato e documentação
 
-- **Polaridade do reset:** o topo recebe `reset_n` ativo em nível baixo e converte para `rst` ativo em nível alto. O `fiu_hash_top` recebe `.reset(rst)`. FIU e Hash Unit utilizam reset assíncrono ativo alto; os demais módulos também recebem reset ativo alto conforme suas interfaces.
+- **Reset:** o sistema utiliza a convenção de reset síncrono ativo em nível alto (`rst`). O sinal é distribuído pelo módulo topo às instâncias internas. Todos os módulos devem seguir essa convenção, aplicando o reset na borda de subida do clock. A conexão do sinal no topo não comprova, por si só, a implementação interna. Portanto, é necessário confirmar essa característica no RTL de cada módulo, especialmente na FIU e na Hash Unit.
 - **Mensagens finais do teste:** as linhas `PASSOU: ...` do resumo são impressas sem condição própria; elas só aparecem porque nenhum erro parou a simulação antes. Convém evitar caracteres acentuados nas mensagens para não quebrar a codificação do console.
 
 ### Operação contínua
@@ -406,7 +426,7 @@ Dois cuidados ficam registrados:
 | `top_extracao_features_com_entrada.sv` | Módulo topo (Hash Unit + Controller + Flow Table + Finalizer) |
 | `controller.sv` | Controller |
 | `flow_table.sv` | Flow Table |
-| `flow_finalizer_v5.sv` | Flow Finalizer V5 |
+| `flow_finalizer.sv` | Flow Finalizer |
 | `fiu_hash_top.sv` e dependências | Identificação do fluxo e cálculo do hash |
 | `tb_top_extracao_features_com_entrada.sv` | Testbench de integração |
 | `hash_vectors.mem` | 181 vetores de entrada e hash esperado |
