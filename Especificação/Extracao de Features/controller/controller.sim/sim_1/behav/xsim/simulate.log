@@ -23,7 +23,7 @@ Pacotes processados: 141/181
 Pacotes processados: 161/181
 Pacotes processados: 181/181
 
-*TODO*S OS PACOTES FORAM PROCESSADOS.
+TODOS OS PACOTES FORAM PROCESSADOS.
 
 RESULTADOS OBSERVADOS NO CONTROLLER:
 MISS:      179
@@ -56,6 +56,6 @@ PASSOU: Vetor de features de 248 bits
 PASSOU: Handshake fin_valid / fin_done
 PASSOU: InvalidaÃ§Ã£o e segunda varredura
 ==================================================
-*TODO*S OS TESTES FORAM CONCLUIDOS COM SUCESSO.
+TODOS OS TESTES FORAM CONCLUIDOS COM SUCESSO.
 ==================================================
-$finish called at time : 4231870 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_top_extracao_features_com_entrada.sv" Line 1439
+$finish called at time : 4231870 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_top_extracao_features_com_entrada.sv" Line 768

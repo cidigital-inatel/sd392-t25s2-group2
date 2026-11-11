@@ -6,7 +6,7 @@ module top_extracao_features_com_entrada #(
     parameter int SCAN_ENTRIES = 65536
 ) (
     input  logic        clk,
-    input  logic        reset_n,
+    input  logic        rst,
 
     // Entrada do pacote
     input  logic [31:0] src_ip_in,
@@ -27,12 +27,10 @@ module top_extracao_features_com_entrada #(
 );
 
     // =========================================================
-    // Reset: FIU e Hash usam ativo baixo.
-    // Controller e Flow Table usam ativo alto.
+    // Reset síncrono e ativo em nível alto para todos os módulos.
     // =========================================================
 
-    logic rst;
-    assign rst = ~reset_n;
+    
 
     // =========================================================
     // Sinais entre FIU, Hash e Controller
