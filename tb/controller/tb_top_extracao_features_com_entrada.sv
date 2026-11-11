@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+
 `default_nettype none
 
 module tb_top_extracao_features_com_entrada;
@@ -16,7 +17,7 @@ module tb_top_extracao_features_com_entrada;
     localparam logic [1:0] RESULT_COLLISION = 2'b11;
 
     logic clk = 1'b0;
-    logic reset_n = 1'b0;
+    logic rst = 1'b1;
     logic in_valid = 1'b0;
     logic pcap_done = 1'b0;
 
@@ -77,6 +78,15 @@ module tb_top_extracao_features_com_entrada;
 
     logic [247:0] expected_feature;
 
+    // Campos temporários para o cálculo de duração
+    logic [47:0] expected_first_seconds;
+    logic [31:0] expected_first_nanoseconds;
+    logic [47:0] expected_last_seconds;
+    logic [31:0] expected_last_nanoseconds;
+    logic [47:0] expected_duration_seconds;
+    logic [31:0] expected_duration_nanoseconds;
+    logic [79:0] expected_duration;
+
     always #5 clk = ~clk;
 
     // ---------------------------------------------------------
@@ -85,7 +95,7 @@ module tb_top_extracao_features_com_entrada;
 
     top_extracao_features_com_entrada dut (
         .clk              (clk),
-        .reset_n          (reset_n),
+        .rst              (rst),
 
         .src_ip_in        (src_ip_in),
         .dst_ip_in        (dst_ip_in),
@@ -353,7 +363,7 @@ module tb_top_extracao_features_com_entrada;
 
     always @(negedge clk) begin
 
-        if (!reset_n) begin
+        if (rst) begin
             observed_features = 0;
 
         end else if (scan_active && fin_done) begin
@@ -380,26 +390,63 @@ module tb_top_extracao_features_com_entrada;
                         "ERRO: Finalizer recebeu feature excedente"
                     );
 
-                // Layout:
-                // [247:144] chave
-                // [143:112] packet_count
-                // [111:80]  byte_count
-                // [79:0]    duration
+                // Separa segundos e nanossegundos dos timestamps.
+                expected_first_seconds =
+                    expected_first_timestamp[expected_scan_index][79:32];
+
+                expected_first_nanoseconds =
+                    expected_first_timestamp[expected_scan_index][31:0];
+
+                expected_last_seconds =
+                    expected_last_timestamp[expected_scan_index][79:32];
+
+                expected_last_nanoseconds =
+                    expected_last_timestamp[expected_scan_index][31:0];
+
+                // Calcula a duração considerando empréstimo de 1 segundo.
+                if (
+                    expected_last_nanoseconds >=
+                    expected_first_nanoseconds
+                ) begin
+
+                    expected_duration_seconds =
+                        expected_last_seconds - expected_first_seconds;
+
+                    expected_duration_nanoseconds =
+                        expected_last_nanoseconds -
+                        expected_first_nanoseconds;
+
+                end else begin
+
+                    expected_duration_seconds =
+                        expected_last_seconds -
+                        expected_first_seconds - 1'b1;
+
+                    expected_duration_nanoseconds =
+                        32'd1000000000 +
+                        expected_last_nanoseconds -
+                        expected_first_nanoseconds;
+
+                end
+
+                expected_duration = {
+                    expected_duration_seconds,
+                    expected_duration_nanoseconds
+                };
 
                 expected_feature = {
                     expected_key[expected_scan_index],
                     expected_packet_count[expected_scan_index],
                     expected_byte_count[expected_scan_index],
-                    (
-                        expected_last_timestamp[expected_scan_index] -
-                        expected_first_timestamp[expected_scan_index]
-                    )
+                    expected_duration
                 };
 
                 if (feature_vector !== expected_feature) begin
 
-                    $display("ERRO FEATURE na entrada %0d",
-                             expected_scan_index);
+                    $display(
+                        "ERRO FEATURE na entrada %0d",
+                        expected_scan_index
+                    );
 
                     $display("Esperado: %062h", expected_feature);
                     $display("Obtido:   %062h", feature_vector);
@@ -407,6 +454,7 @@ module tb_top_extracao_features_com_entrada;
                     $fatal(1,
                         "ERRO: feature_vector incorreto"
                     );
+
                 end
 
                 observed_features = observed_features + 1;
@@ -429,7 +477,6 @@ module tb_top_extracao_features_com_entrada;
         observed_miss = 0;
         observed_hit = 0;
         observed_collision = 0;
-        observed_features = 0;
 
         scan_active = 1'b0;
         empty_scan_active = 1'b0;
@@ -461,22 +508,25 @@ module tb_top_extracao_features_com_entrada;
         $display("COLLISION: %0d", expected_collision);
         $display("FEATURES:  %0d", expected_feature_count);
 
-        if (expected_miss == 0 ||
+        if (
+            expected_miss == 0 ||
             expected_hit == 0 ||
-            expected_collision == 0) begin
-
+            expected_collision == 0
+        ) begin
             $fatal(1,
                 "ERRO: conjunto de vetores nao cobre MISS, HIT e COLLISION"
             );
         end
 
         // -----------------------------------------------------
-        // Reset
+        // Reset síncrono ativo em nível alto
         // -----------------------------------------------------
+
+        rst = 1'b1;
 
         repeat (5) @(negedge clk);
 
-        reset_n = 1'b1;
+        rst = 1'b0;
 
         repeat (5) @(negedge clk);
 
@@ -517,8 +567,11 @@ module tb_top_extracao_features_com_entrada;
             repeat (INTERVALO_PACOTES) @(negedge clk);
 
             if ((i % 20) == 0)
-                $display("Pacotes processados: %0d/%0d",
-                         i + 1, NUM_VETORES);
+                $display(
+                    "Pacotes processados: %0d/%0d",
+                    i + 1,
+                    NUM_VETORES
+                );
 
         end
 
@@ -545,8 +598,9 @@ module tb_top_extracao_features_com_entrada;
         if (observed_collision != expected_collision)
             $fatal(1, "ERRO: quantidade de COLLISION incorreta");
 
-        if (dut.u_controller.collision_count !==
-            expected_collision)
+        if (
+            dut.u_controller.collision_count !== expected_collision
+        )
             $fatal(1,
                 "ERRO: collision_count interno incorreto"
             );
@@ -593,15 +647,20 @@ module tb_top_extracao_features_com_entrada;
 
         if (observed_features != expected_feature_count) begin
 
-            $display("Features esperadas: %0d",
-                     expected_feature_count);
+            $display(
+                "Features esperadas: %0d",
+                expected_feature_count
+            );
 
-            $display("Features recebidas: %0d",
-                     observed_features);
+            $display(
+                "Features recebidas: %0d",
+                observed_features
+            );
 
             $fatal(1,
                 "ERRO: quantidade de features incorreta"
             );
+
         end
 
         $display("PASSOU: todas as features foram conferidas.");
@@ -628,10 +687,13 @@ module tb_top_extracao_features_com_entrada;
                             idx
                         );
                     end
+
                 end
             end
 
-            $display("PASSOU: todas as entradas enviadas foram invalidadas.");
+            $display(
+                "PASSOU: todas as entradas enviadas foram invalidadas."
+            );
 
         end
 
@@ -671,7 +733,9 @@ module tb_top_extracao_features_com_entrada;
 
         repeat (3) @(negedge clk);
 
-        $display("PASSOU: segunda varredura sem features repetidas.");
+        $display(
+            "PASSOU: segunda varredura sem features repetidas."
+        );
 
         // -----------------------------------------------------
         // Relatório final
@@ -702,6 +766,7 @@ module tb_top_extracao_features_com_entrada;
         $display("==================================================");
 
         $finish;
+
     end
 
 endmodule

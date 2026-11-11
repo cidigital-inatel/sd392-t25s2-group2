@@ -6,7 +6,7 @@ module top_extracao_features_com_entrada #(
     parameter int SCAN_ENTRIES = 65536
 ) (
     input  logic        clk,
-    input  logic        reset_n,
+    input  logic        rst,
 
     // Entrada do pacote
     input  logic [31:0] src_ip_in,
@@ -27,12 +27,10 @@ module top_extracao_features_com_entrada #(
 );
 
     // =========================================================
-    // Reset: FIU e Hash usam ativo baixo.
-    // Controller e Flow Table usam ativo alto.
+    // Reset síncrono e ativo em nível alto para todos os módulos.
     // =========================================================
 
-    logic rst;
-    assign rst = ~reset_n;
+    
 
     // =========================================================
     // Sinais entre FIU, Hash e Controller
@@ -70,24 +68,24 @@ module top_extracao_features_com_entrada #(
     // =========================================================
 
     fiu_hash_top u_fiu_hash_top (
-        .clk              (clk),
-        .reset_n          (reset_n),
+    .clk              (clk),
+    .reset             (rst),
 
-        .src_ip_in        (src_ip_in),
-        .dst_ip_in        (dst_ip_in),
-        .src_port_in      (src_port_in),
-        .dst_port_in      (dst_port_in),
-        .protocol_in      (protocol_in),
-        .packet_length_in (packet_length_in),
-        .timestamp_in     (timestamp_in),
-        .in_valid         (in_valid),
+    .src_ip_in        (src_ip_in),
+    .dst_ip_in        (dst_ip_in),
+    .src_port_in      (src_port_in),
+    .dst_port_in      (dst_port_in),
+    .protocol_in      (protocol_in),
+    .packet_length_in (packet_length_in),
+    .timestamp_in     (timestamp_in),
+    .in_valid         (in_valid),
 
-        .hash_index       (hash_index),
-        .flow_key         (flow_key),
-        .packet_length    (packet_length),
-        .timestamp        (timestamp),
-        .hash_valid       (hash_valid)
-    );
+    .hash_index       (hash_index),
+    .flow_key         (flow_key),
+    .packet_length    (packet_length),
+    .timestamp        (timestamp),
+    .hash_valid       (hash_valid)
+);
 
     // =========================================================
     // 2. Controller
@@ -149,14 +147,14 @@ module top_extracao_features_com_entrada #(
     // 4. Finalização e geração do vetor de features
     // =========================================================
 
-    flow_finalizer_v3 u_finalizer (
-        .clk            (clk),
-        .rst            (rst),
-        .fin_valid      (fin_valid),
-        .flow_entry     (flow_entry),
-        .feature_vector (feature_vector),
-        .fin_done       (fin_done)
-    );
+   flow_finalizer_v5 u_finalizer (
+    .clk            (clk),
+    .rst            (rst),
+    .fin_valid      (fin_valid),
+    .flow_entry     (flow_entry),
+    .feature_vector (feature_vector),
+    .fin_done       (fin_done)
+);
 
 endmodule
 
