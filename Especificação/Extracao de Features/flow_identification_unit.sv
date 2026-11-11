@@ -3,7 +3,7 @@
 
 // FIU da Semana 6, baseada na interface de dados do pacote publico de Bruno.
 // Recepcao unica por periodo alto de valid -> captura -> start -> publicacao.
-// Um registro local, sem FIFO ou ready. Reset assincrono ativo alto.
+// Um registro local, sem FIFO ou ready. Reset sincrono ativo alto.
 // timestamp_in[79:32] = segundos; [31:0] = nanossegundos (passagem integral).
 module flow_identification_unit (
     input wire logic         clk,
@@ -33,7 +33,7 @@ module flow_identification_unit (
 
     assign capture_allowed = (state == IDLE) && !start;
 
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             src_ip_reg    <= '0;
             dst_ip_reg    <= '0;
@@ -63,7 +63,7 @@ module flow_identification_unit (
         end
     end
 
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             state             <= IDLE;
             flow_key_out      <= '0;

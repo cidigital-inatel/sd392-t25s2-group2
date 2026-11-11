@@ -4,7 +4,7 @@
 // Samuel - Hash Unit: valid -> captura atomica -> start registrado -> FSM.
 // CRC-16/CCITT-FALSE: poly=1021, init=FFFF, refin/refout=0, xorout=0000.
 // Chave de 13 bytes, MSB primeiro. Um registro por vez, sem FIFO.
-// Reset ASSINCRONO ativo alto. start e capture_allowed sao sinais INTERNOS.
+// Reset SINCRONO ativo alto. start e capture_allowed sao sinais INTERNOS.
 // timestamp_in[79:32] = segundos; [31:0] = nanossegundos (passagem integral).
 // Semana 6: uma captura por periodo alto de valid; rearmar somente apos baixo.
 // Novas transferencias separadas por pelo menos 16 clocks, sem FIFO.
@@ -64,7 +64,7 @@ module hash_unit (
 
     // Recepcao: preserva juntos os 200 bits e produz start por um ciclo.
     // !start impede sobrescrever a captura enquanto a FSM ainda esta em IDLE.
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             key_reg       <= '0;
             length_reg    <= '0;
@@ -90,7 +90,7 @@ module hash_unit (
     end
 
     // A FSM usa start da borda ANTERIOR: os dados ja estao capturados.
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             state      <= IDLE;
             crc_reg    <= 16'hFFFF;
