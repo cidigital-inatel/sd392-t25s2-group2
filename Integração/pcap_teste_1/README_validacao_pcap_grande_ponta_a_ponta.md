@@ -50,12 +50,6 @@ A escolha dos primeiros 10.000 registros permite comparação direta com a campa
 
 ## 3. Configuração da simulação
 
-Ferramenta:
-
-```text
-ModelSim Intel FPGA Edition 2020.1
-```
-
 Configuração principal:
 
 ```text
