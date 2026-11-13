@@ -1,0 +1,58 @@
+# Compile of tb_top_parser_extracao_features.sv was successful.
+# Compile of top_parser_extracao_features.sv was successful.
+# Compile of controller_base.sv was successful.
+# Compile of fiu_hash_top.sv was successful.
+# Compile of flow_finalizer.sv was successful.
+# Compile of flow_identification_unit.sv was successful.
+# Compile of flow_table.sv was successful.
+# Compile of hash_unit.sv was successful.
+# Compile of packet_parser.sv was successful.
+# Compile of top_extracao_features_entrada.sv was successful.
+# 10 compiles, 0 failed with no errors.
+vsim -voptargs=+acc work.tb_top_parser_extracao_features
+# vsim -voptargs="+acc" work.tb_top_parser_extracao_features 
+# Start time: 18:07:05 on Nov 13,2026
+# Loading sv_std.std
+# Loading work.tb_top_parser_extracao_features
+# Loading work.top_parser_extracao_features
+# Loading work.packet_parser
+# Loading work.top_extracao_features_com_entrada
+# Loading work.fiu_hash_top
+# Loading work.flow_identification_unit
+# Loading work.hash_unit
+# Loading work.controller
+# Loading work.flow_table
+# Loading work.flow_finalizer_v5
+
+add wave -r sim:/tb_top_parser_extracao_features/*
+add wave -r sim:/tb_top_parser_extracao_features/dut/*
+
+run -all
+# ---- ENVIA P 1 len=54 sec=1 ns=0 ----
+# ---- ENVIA P 2 len=74 sec=1 ns=100000 ----
+# ---- ENVIA P 3 len=66 sec=1 ns=500000 ----
+# ---- ENVIA P 4 len=42 sec=2 ns=0 ----
+# ---- ENVIA P 5 len=50 sec=2 ns=200000 ----
+# ---- ENVIA P 6 len=58 sec=3 ns=0 ----
+# ---- ENVIA P 7 len=94 sec=3 ns=900000 ----
+# ---- ENVIA P 8 len=42 sec=4 ns=0 ----
+# ---- PCAP_DONE: iniciando varredura ----
+# PASS FEATURE #1 key=0a0000010a0000023039005006 packets=2 bytes=124 duration=000000000000000dbba0
+# PASS FEATURE #2 key=c0a80114080804049c40003511 packets=2 bytes=64 duration=00000000000000030d40
+# PASS FEATURE #3 key=ac10000aac1000141388138911 packets=1 bytes=28 duration=00000000000000000000
+# PASS FEATURE #4 key=c0a8010a08080808cb8401bb06 packets=3 bytes=152 duration=0000000000000007a120
+# 
+# ======================================================
+# PASS: VALIDACAO PONTA A PONTA.
+# PCAP -> Parser -> FIU -> Hash -> Controller -> Flow Table -> Finalizer
+# 8 pacotes de entrada, 4 fluxos e 4 features corretas.
+# ======================================================
+# ** Note: $finish    : C:/Users/herma/Downloads/integracao_ponta_a_ponta_parser_features/tb_top_parser_extracao_features.sv(356)
+#    Time: 1238195 ns  Iteration: 1  Instance: /tb_top_parser_extracao_features
+# 1
+# Break in Module tb_top_parser_extracao_features at C:/Users/herma/Downloads/integracao_ponta_a_ponta_parser_features/tb_top_parser_extracao_features.sv line 356
+wave zoom full
+# {0 ps} {1300104750 ps}
+quit -sim
+# End time: 18:16:57 on Nov 13,2026, Elapsed time: 0:09:52
+# Errors: 0, Warnings: 5
