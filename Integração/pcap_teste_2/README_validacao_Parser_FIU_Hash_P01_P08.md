@@ -265,24 +265,6 @@ Os oito pacotes pertencem a quatro uniflows:
 | F3 | P06, P07 | TCP | 7940 |
 | F4 | P08 | UDP | 39485 |
 
-A `flow_key` é definida como:
-
-```text
-flow_key = {
-    src_ip,
-    dst_ip,
-    src_port,
-    dst_port,
-    protocol
-}
-```
-
-Total:
-
-```text
-32 + 32 + 16 + 16 + 8 = 104 bits
-```
-
 ---
 
 ## 8. Resultado da simulação
