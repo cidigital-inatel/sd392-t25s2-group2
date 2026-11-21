@@ -1,61 +1,27 @@
 Time resolution is 1 ps
+[FINALIZACAO] protocolo: fluxo=0 latencia=2 ciclos
+[FINALIZACAO] PASSOU: TCP FIN gera uma finalizacao por protocolo
+[FINALIZACAO] PASSOU: janela ainda nao atingiu o limite no fluxo TCP
+[FINALIZACAO] protocolo: fluxo=1 latencia=1 ciclos
+[FINALIZACAO] timeout: fluxo=0 latencia=10 ciclos
+[FINALIZACAO] PASSOU: TCP RST gera finalizacao por protocolo
+[FINALIZACAO] timeout: fluxo=1 latencia=8 ciclos
+[FINALIZACAO] timeout: fluxo=2 latencia=8 ciclos
+[FINALIZACAO] PASSOU: timeout finaliza fluxos inativos, inclusive UDP
+[FINALIZACAO] PASSOU: fluxo UDP sem evento de encerramento nao e finalizado por FIN/RST
+[FINALIZACAO] janela: fluxo=3 latencia=3 ciclos
+[FINALIZACAO] PASSOU: janela finaliza ao atingir quatro pacotes
 
-==================================================
- TESTBENCH DE INTEGRACAO COMPLETA
- Hash Unit + Controller + Flow Table + Finalizer
-==================================================
-
-RESULTADOS ESPERADOS DO MODELO:
-MISS:      179
-HIT:       1
-COLLISION: 1
-FEATURES:  179
-
-INICIANDO TESTES HASH + CONTROLLER
-Pacotes processados: 1/181
-Pacotes processados: 21/181
-Pacotes processados: 41/181
-Pacotes processados: 61/181
-Pacotes processados: 81/181
-Pacotes processados: 101/181
-Pacotes processados: 121/181
-Pacotes processados: 141/181
-Pacotes processados: 161/181
-Pacotes processados: 181/181
-
-TODOS OS PACOTES FORAM PROCESSADOS.
-
-RESULTADOS OBSERVADOS NO CONTROLLER:
-MISS:      179
-HIT:       1
-COLLISION: 1
-
-INICIANDO VARREDURA DA FLOW TABLE
-PASSOU: todas as features foram conferidas.
-
-VERIFICANDO INVALIDACAO DA FLOW TABLE
-PASSOU: todas as entradas enviadas foram invalidadas.
-
-INICIANDO SEGUNDA VARREDURA
-PASSOU: segunda varredura sem features repetidas.
-
-==================================================
-          RESULTADO FINAL DA INTEGRACAO
-==================================================
-Pacotes enviados:       181
-MISS:                   179
-HIT:                    1
-COLLISION:              1
-Features conferidas:    179
-
-PASSOU: Hash Unit + Controller
-PASSOU: Controller + Flow Table
-PASSOU: Controller + Finalizer
-PASSOU: Layout dos 384 bits
-PASSOU: Vetor de features de 248 bits
-PASSOU: Handshake fin_valid / fin_done
-PASSOU: InvalidaÃ§Ã£o e segunda varredura
-==================================================
-TODOS OS TESTES FORAM CONCLUIDOS COM SUCESSO.
-==================================================
-$finish called at time : 4231870 ns : File "C:/Users/Elaine/Desktop/Inatel-p10/CI_Digital/TCC/sd392-t25s2-group2/Especificação/Extracao de Features/tb_top_extracao_features_com_entrada.sv" Line 768
+========== RESUMO DAS ESTRATEGIAS ==========
+Protocolo: finalizacoes=2 | soma das latencias=3 ciclos
+Timeout:   finalizacoes=3 | soma das latencias=26 ciclos
+Janela:    finalizacoes=1 | soma das latencias=3 ciclos
+Parametros: TIMEOUT_CYCLES=6 | WINDOW_PACKETS=4
+============================================
+[FINALIZACAO] timeout: fluxo=3 latencia=12 ciclos
+[RD=1 WR=1] PASSOU: MISS idx 5
+[RD=1 WR=1] PASSOU: MISS idx 5
+[RD=1 WR=1] PASSOU: HIT idx 5
+[RD=1 WR=1] PASSOU: HIT idx 5
+[RD=1 WR=1] PASSOU: COLLISION chave diferente
+[RD=1 WR=1] PASSOU: COLLISION chave diferente

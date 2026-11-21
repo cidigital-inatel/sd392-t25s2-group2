@@ -1,13 +1,7 @@
 # compile verilog/system verilog design source files
 sv xil_defaultlib  --include "../../../../../../../../../../../../../../AMDDesignTools/2025.2/Vivado/data/rsb/busdef" \
 "../../../../../controller_base.sv" \
-"../../../../../fiu_hash_top.sv" \
-"../../../../../flow_finalizer.sv" \
-"../../../../../flow_identification_unit.sv" \
-"../../../../../flow_table.sv" \
-"../../../../../hash_unit.sv" \
-"../../../../../top_extracao_features_entrada.sv" \
-"../../../../../tb_top_extracao_features_com_entrada.sv" \
+"../../../../../tb_controller_unit.sv" \
 
 # compile glbl module
 verilog xil_defaultlib "glbl.v"

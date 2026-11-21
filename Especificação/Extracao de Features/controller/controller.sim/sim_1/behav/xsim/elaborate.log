@@ -1,21 +1,9 @@
 Vivado Simulator v2025.2
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
-Running: C:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe --incr --debug typical --relax --mt 2 -L xil_defaultlib -L uvm -L unisims_ver -L unimacro_ver -L secureip --snapshot tb_top_extracao_features_com_entrada_behav xil_defaultlib.tb_top_extracao_features_com_entrada xil_defaultlib.glbl -log elaborate.log 
+Running: C:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe --incr --debug typical --relax --mt 2 -L xil_defaultlib -L uvm -L unisims_ver -L unimacro_ver -L secureip --snapshot tb_controller_unit_behav xil_defaultlib.tb_controller_unit xil_defaultlib.glbl -log elaborate.log 
 Using 2 slave threads.
 Starting static elaboration
 Pass Through NonSizing Optimizer
 Completed static elaboration
-Starting simulation data flow analysis
-Completed simulation data flow analysis
-Time Resolution for simulation is 1ps
-Compiling module xil_defaultlib.flow_identification_unit
-Compiling module xil_defaultlib.hash_unit
-Compiling module xil_defaultlib.fiu_hash_top
-Compiling module xil_defaultlib.controller
-Compiling module xil_defaultlib.flow_table(DEPTH=1048576)
-Compiling module xil_defaultlib.flow_finalizer_v5
-Compiling module xil_defaultlib.top_extracao_features_com_entrad...
-Compiling module xil_defaultlib.tb_top_extracao_features_com_ent...
-Compiling module xil_defaultlib.glbl
-Built simulation snapshot tb_top_extracao_features_com_entrada_behav
+INFO: [XSIM 43-4323] No Change in HDL. Linking previously generated obj files to create kernel
