@@ -1362,10 +1362,11 @@ endmodule
 // =====================================================================
 module tb_controller_unit;
 
-    logic [7:0] done;
+    logic [8:0] done;
     integer     e_u0, e_u1, e_u2, e_u3, e_full;     // pacote
-    integer     e_s0, e_s1, e_s2;           // varredura
-    integer     err_pacote, err_scan, total;
+    integer     e_s0, e_s1, e_s2;                   // varredura
+    integer     e_final;                            // estrategias de finalizacao
+    integer     err_pacote, err_scan, err_final, total;
 
     // ---------------- Caminho do pacote ----------------
     unit_env #(.RD_LAT(1), .WR_LAT(1))                 env_1_1 (.done(done[0]), .errors(e_u0));
@@ -1382,25 +1383,361 @@ module tb_controller_unit;
     scan_env #(.INV(1'b1), .MODE(1), .RD_LAT(2), .WR_LAT(2), .FIN_LAT(1), .QUIET(1'b1))    env_scan_b (.done(done[5]), .errors(e_s1));
     scan_env #(.INV(1'b0), .MODE(0), .RD_LAT(1), .WR_LAT(3), .FIN_LAT(5), .QUIET(1'b1))    env_scan_c (.done(done[6]), .errors(e_s2));
 
+    // ---------------- Avaliacao das estrategias de finalizacao ----------------
+    // Ambiente comportamental separado: nao altera nem substitui o RTL do Controller.
+    finalization_eval_env env_final (.done(done[8]), .errors(e_final));
+
     initial begin
-        err_pacote = 0; err_scan = 0; total = 0;
-        wait (done === 8'hFF);
+        err_pacote = 0; err_scan = 0; err_final = 0; total = 0;
+        wait (done === 9'h1FF);
         #20;
         err_pacote = e_u0 + e_u1 + e_u2 + e_u3 + e_full;
         err_scan   = e_s0 + e_s1 + e_s2;
-        total      = err_pacote + err_scan;
+        err_final  = e_final;
+        total      = err_pacote + err_scan + err_final;
 
-        $display("Resumo: pacote = %0d erro(s) | varredura = %0d erro(s)", err_pacote, err_scan);
+        $display("Resumo: pacote = %0d erro(s) | varredura = %0d erro(s) | finalizacao = %0d erro(s)",
+                 err_pacote, err_scan, err_final);
         if (total == 0)
-            $display("TODOS OS TESTES UNITARIOS PASSARAM! (pacote: 4 configuracoes + enderecos completos; varredura: 3 configuracoes)");
+            $display("TODOS OS TESTES PASSARAM! (pacote, varredura e avaliacao das estrategias de finalizacao)");
         else
-            $display("TESTES UNITARIOS FINALIZADOS COM %0d ERRO(S).", total);
+            $display("TESTES FINALIZADOS COM %0d ERRO(S).", total);
         $finish;
     end
 
     initial begin
         #200000000;
         $fatal(1, "TIMEOUT global");
+    end
+
+endmodule
+
+
+// =====================================================================
+// AVALIACAO COMPARATIVA DAS ESTRATEGIAS DE FINALIZACAO
+//
+// IMPORTANTE:
+// Este ambiente e um modelo comportamental de referencia. Ele nao instancia
+// o Controller RTL, pois a interface atual do Controller nao recebe os
+// flags TCP FIN/RST e sua varredura e iniciada por pcap_done.
+//
+// STRATEGY:
+//   0 = protocolo: TCP FIN ou RST
+//   1 = timeout: ausencia de pacotes por TIMEOUT_CYCLES
+//   2 = janela: finaliza ao atingir WINDOW_PACKETS
+//
+// O modelo mantem estado por fluxo (flow_id) para representar os metadados
+// adicionais que cada alternativa exigiria. O estimulo e compartilhado
+// entre os tres modelos para comparar suas respostas.
+// =====================================================================
+
+module finalization_policy_model #(
+    parameter integer STRATEGY       = 0,
+    parameter integer MAX_FLOWS      = 4,
+    parameter integer TIMEOUT_CYCLES = 6,
+    parameter integer WINDOW_PACKETS = 4
+) (
+    input  logic       clk,
+    input  logic       rst,
+    input  logic       packet_valid,
+    input  logic [1:0] flow_id,
+    input  logic [7:0] transport_protocol,
+    input  logic       tcp_fin,
+    input  logic       tcp_rst,
+
+    output logic       finalize_valid,
+    output logic [1:0] finalized_flow_id,
+    output logic [31:0] finalize_latency
+);
+
+    localparam logic [7:0] IPPROTO_TCP = 8'd6;
+
+    logic active [0:MAX_FLOWS-1];
+    integer packet_count [0:MAX_FLOWS-1];
+    integer idle_count   [0:MAX_FLOWS-1];
+    integer age_count    [0:MAX_FLOWS-1];
+
+    integer i;
+    integer current_count;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            finalize_valid    <= 1'b0;
+            finalized_flow_id <= '0;
+            finalize_latency  <= '0;
+
+            for (i = 0; i < MAX_FLOWS; i = i + 1) begin
+                active[i]       <= 1'b0;
+                packet_count[i] <= 0;
+                idle_count[i]   <= 0;
+                age_count[i]    <= 0;
+            end
+        end else begin
+            finalize_valid <= 1'b0;
+
+            // Timeout: cada fluxo ativo possui seu proprio contador de inatividade.
+            // O fluxo que recebe pacote neste ciclo nao acumula inatividade.
+            if (STRATEGY == 1) begin
+                for (i = 0; i < MAX_FLOWS; i = i + 1) begin
+                    if (active[i]) begin
+                        if (packet_valid && (flow_id == i[1:0])) begin
+                            idle_count[i] <= 0;
+                            age_count[i]  <= age_count[i] + 1;
+                        end else begin
+                            age_count[i] <= age_count[i] + 1;
+                            if ((idle_count[i] + 1) >= TIMEOUT_CYCLES) begin
+                                finalize_valid    <= 1'b1;
+                                finalized_flow_id <= i[1:0];
+                                finalize_latency  <= age_count[i] + 1;
+                                active[i]         <= 1'b0;
+                                packet_count[i]   <= 0;
+                                idle_count[i]     <= 0;
+                                age_count[i]      <= 0;
+                            end else begin
+                                idle_count[i] <= idle_count[i] + 1;
+                            end
+                        end
+                    end
+                end
+            end
+
+            // Recepcao/atualizacao do fluxo.
+            if (packet_valid) begin
+                if (!active[flow_id]) begin
+                    active[flow_id]       <= 1'b1;
+                    packet_count[flow_id] <= 1;
+                    idle_count[flow_id]   <= 0;
+                    age_count[flow_id]    <= 0;
+                    current_count         = 1;
+                end else begin
+                    packet_count[flow_id] <= packet_count[flow_id] + 1;
+                    idle_count[flow_id]   <= 0;
+                    age_count[flow_id]    <= age_count[flow_id] + 1;
+                    current_count         = packet_count[flow_id] + 1;
+                end
+
+                // Protocolo: somente TCP possui FIN/RST neste modelo.
+                if ((STRATEGY == 0) &&
+                    (transport_protocol == IPPROTO_TCP) &&
+                    (tcp_fin || tcp_rst)) begin
+                    finalize_valid    <= 1'b1;
+                    finalized_flow_id <= flow_id;
+                    finalize_latency  <= active[flow_id] ? (age_count[flow_id] + 1) : 0;
+                    active[flow_id]   <= 1'b0;
+                    packet_count[flow_id] <= 0;
+                    idle_count[flow_id]   <= 0;
+                    age_count[flow_id]    <= 0;
+                end
+
+                // Janela: finaliza ao receber o N-esimo pacote do fluxo.
+                if ((STRATEGY == 2) && (current_count >= WINDOW_PACKETS)) begin
+                    finalize_valid    <= 1'b1;
+                    finalized_flow_id <= flow_id;
+                    finalize_latency  <= active[flow_id] ? (age_count[flow_id] + 1) : 0;
+                    active[flow_id]   <= 1'b0;
+                    packet_count[flow_id] <= 0;
+                    idle_count[flow_id]   <= 0;
+                    age_count[flow_id]    <= 0;
+                end
+            end
+        end
+    end
+
+endmodule
+
+
+module finalization_eval_env #(
+    parameter integer TIMEOUT_CYCLES = 6,
+    parameter integer WINDOW_PACKETS = 4
+) (
+    output logic   done,
+    output integer errors
+);
+
+    localparam logic [7:0] IPPROTO_TCP = 8'd6;
+    localparam logic [7:0] IPPROTO_UDP = 8'd17;
+
+    logic clk = 1'b0;
+    logic rst = 1'b1;
+
+    logic       packet_valid;
+    logic [1:0] flow_id;
+    logic [7:0] transport_protocol;
+    logic       tcp_fin;
+    logic       tcp_rst;
+
+    logic       fin_protocol, fin_timeout, fin_window;
+    logic [1:0] id_protocol, id_timeout, id_window;
+    logic [31:0] lat_protocol, lat_timeout, lat_window;
+
+    integer count_protocol = 0;
+    integer count_timeout  = 0;
+    integer count_window   = 0;
+    integer latency_sum_protocol = 0;
+    integer latency_sum_timeout  = 0;
+    integer latency_sum_window   = 0;
+
+    always #5 clk = ~clk;
+
+    finalization_policy_model #(
+        .STRATEGY(0), .TIMEOUT_CYCLES(TIMEOUT_CYCLES),
+        .WINDOW_PACKETS(WINDOW_PACKETS)
+    ) policy_protocol (
+        .clk(clk), .rst(rst), .packet_valid(packet_valid),
+        .flow_id(flow_id), .transport_protocol(transport_protocol),
+        .tcp_fin(tcp_fin), .tcp_rst(tcp_rst),
+        .finalize_valid(fin_protocol), .finalized_flow_id(id_protocol),
+        .finalize_latency(lat_protocol)
+    );
+
+    finalization_policy_model #(
+        .STRATEGY(1), .TIMEOUT_CYCLES(TIMEOUT_CYCLES),
+        .WINDOW_PACKETS(WINDOW_PACKETS)
+    ) policy_timeout (
+        .clk(clk), .rst(rst), .packet_valid(packet_valid),
+        .flow_id(flow_id), .transport_protocol(transport_protocol),
+        .tcp_fin(tcp_fin), .tcp_rst(tcp_rst),
+        .finalize_valid(fin_timeout), .finalized_flow_id(id_timeout),
+        .finalize_latency(lat_timeout)
+    );
+
+    finalization_policy_model #(
+        .STRATEGY(2), .TIMEOUT_CYCLES(TIMEOUT_CYCLES),
+        .WINDOW_PACKETS(WINDOW_PACKETS)
+    ) policy_window (
+        .clk(clk), .rst(rst), .packet_valid(packet_valid),
+        .flow_id(flow_id), .transport_protocol(transport_protocol),
+        .tcp_fin(tcp_fin), .tcp_rst(tcp_rst),
+        .finalize_valid(fin_window), .finalized_flow_id(id_window),
+        .finalize_latency(lat_window)
+    );
+
+    // Registro das finalizacoes e da latencia observada em ciclos de clock.
+    always @(posedge clk) begin
+        if (rst) begin
+            count_protocol <= 0;
+            count_timeout  <= 0;
+            count_window   <= 0;
+            latency_sum_protocol <= 0;
+            latency_sum_timeout  <= 0;
+            latency_sum_window   <= 0;
+        end else begin
+            if (fin_protocol) begin
+                count_protocol <= count_protocol + 1;
+                latency_sum_protocol <= latency_sum_protocol + lat_protocol;
+                $display("[FINALIZACAO] protocolo: fluxo=%0d latencia=%0d ciclos",
+                         id_protocol, lat_protocol);
+            end
+            if (fin_timeout) begin
+                count_timeout <= count_timeout + 1;
+                latency_sum_timeout <= latency_sum_timeout + lat_timeout;
+                $display("[FINALIZACAO] timeout: fluxo=%0d latencia=%0d ciclos",
+                         id_timeout, lat_timeout);
+            end
+            if (fin_window) begin
+                count_window <= count_window + 1;
+                latency_sum_window <= latency_sum_window + lat_window;
+                $display("[FINALIZACAO] janela: fluxo=%0d latencia=%0d ciclos",
+                         id_window, lat_window);
+            end
+        end
+    end
+
+    task automatic send_eval_packet(
+        input logic [1:0] fid,
+        input logic [7:0] proto,
+        input logic fin_flag,
+        input logic rst_flag
+    );
+        begin
+            @(negedge clk);
+            flow_id            = fid;
+            transport_protocol = proto;
+            tcp_fin             = fin_flag;
+            tcp_rst             = rst_flag;
+            packet_valid        = 1'b1;
+
+            @(negedge clk);
+            packet_valid        = 1'b0;
+            tcp_fin             = 1'b0;
+            tcp_rst             = 1'b0;
+        end
+    endtask
+
+    task automatic check_condition(input bit condition, input string message);
+        begin
+            if (!condition) begin
+                $error("[FINALIZACAO] FALHOU: %s", message);
+                errors = errors + 1;
+            end else begin
+                $display("[FINALIZACAO] PASSOU: %s", message);
+            end
+        end
+    endtask
+
+    initial begin
+        done = 1'b0;
+        errors = 0;
+        packet_valid = 1'b0;
+        flow_id = '0;
+        transport_protocol = IPPROTO_TCP;
+        tcp_fin = 1'b0;
+        tcp_rst = 1'b0;
+
+        repeat (4) @(negedge clk);
+        rst = 1'b0;
+        repeat (2) @(negedge clk);
+
+        // Caso 1: TCP encerra por FIN. Protocolo deve finalizar imediatamente.
+        send_eval_packet(2'd0, IPPROTO_TCP, 1'b0, 1'b0);
+        send_eval_packet(2'd0, IPPROTO_TCP, 1'b0, 1'b0);
+        send_eval_packet(2'd0, IPPROTO_TCP, 1'b1, 1'b0);
+        repeat (2) @(negedge clk);
+        check_condition(count_protocol == 1,
+                        "TCP FIN gera uma finalizacao por protocolo");
+        check_condition(count_window == 0,
+                        "janela ainda nao atingiu o limite no fluxo TCP");
+
+        // Caso 2: TCP encerra por RST.
+        send_eval_packet(2'd1, IPPROTO_TCP, 1'b0, 1'b0);
+        send_eval_packet(2'd1, IPPROTO_TCP, 1'b0, 1'b1);
+        repeat (2) @(negedge clk);
+        check_condition(count_protocol == 2,
+                        "TCP RST gera finalizacao por protocolo");
+
+        // Caso 3: UDP nao possui FIN/RST TCP. O timeout consegue finalizar
+        // fluxos que ficam sem novos pacotes; a estrategia por protocolo nao.
+        send_eval_packet(2'd2, IPPROTO_UDP, 1'b0, 1'b0);
+        send_eval_packet(2'd2, IPPROTO_UDP, 1'b0, 1'b0);
+        repeat (TIMEOUT_CYCLES + 3) @(negedge clk);
+        check_condition(count_timeout >= 3,
+                        "timeout finaliza fluxos inativos, inclusive UDP");
+        check_condition(count_protocol == 2,
+                        "fluxo UDP sem evento de encerramento nao e finalizado por FIN/RST");
+
+        // Caso 4: janela de pacotes. Quatro pacotes do mesmo fluxo finalizam
+        // a janela independentemente de FIN/RST.
+        send_eval_packet(2'd3, IPPROTO_UDP, 1'b0, 1'b0);
+        send_eval_packet(2'd3, IPPROTO_UDP, 1'b0, 1'b0);
+        send_eval_packet(2'd3, IPPROTO_UDP, 1'b0, 1'b0);
+        send_eval_packet(2'd3, IPPROTO_UDP, 1'b0, 1'b0);
+        repeat (2) @(negedge clk);
+        check_condition(count_window == 1,
+                        "janela finaliza ao atingir quatro pacotes");
+
+        $display("");
+        $display("========== RESUMO DAS ESTRATEGIAS ==========");
+        $display("Protocolo: finalizacoes=%0d | soma das latencias=%0d ciclos",
+                 count_protocol, latency_sum_protocol);
+        $display("Timeout:   finalizacoes=%0d | soma das latencias=%0d ciclos",
+                 count_timeout, latency_sum_timeout);
+        $display("Janela:    finalizacoes=%0d | soma das latencias=%0d ciclos",
+                 count_window, latency_sum_window);
+        $display("Parametros: TIMEOUT_CYCLES=%0d | WINDOW_PACKETS=%0d",
+                 TIMEOUT_CYCLES, WINDOW_PACKETS);
+        $display("============================================");
+
+        done = 1'b1;
     end
 
 endmodule
